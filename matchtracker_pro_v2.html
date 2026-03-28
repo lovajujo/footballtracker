@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Match Tracker Pro - Párhuzamos Modulok</title>
+    <title>Football Tracker Pro v2</title>
+	<link rel="icon" type="image/png" href="icon.png">
     <style>
         :root { --bg: #121212; --panel: #1e1e1e; --border: #333; --text: #fff; --primary: #1E88E5; --danger: #E53935; --warning: #FFB300; --success: #27ae60; --gray: #555; }
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); color: var(--text); margin: 0; padding: 10px; text-align: center; }
@@ -153,7 +154,10 @@
         </div>
 
         <div class="monitor-panel">
-            <h4 style="margin: 0 0 10px 0; border-bottom: 1px solid #444; padding-bottom: 5px;">Legutóbbi események <span style="float:right; font-weight:normal; font-size:0.8em;">(Z: Visszavonás)</span></h4>
+            <h4 style="margin: 0 0 10px 0; border-bottom: 1px solid #444; padding-bottom: 5px; display: flex; justify-content: space-between; align-items: center;">
+                <span>Legutóbbi események</span>
+                <button class="btn-ctrl" style="background: var(--danger); padding: 5px 10px; font-size: 0.85em;" onclick="undoLastEvent()">↩ VISSZAVONÁS (Z)</button>
+            </h4>
             <ul id="log-list"></ul>
         </div>
 
