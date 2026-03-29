@@ -4,54 +4,381 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Football Tracker Pro v2</title>
-	<link rel="icon" type="image/png" href="icon.png">
+    <link rel="icon" type="image/png" href="icon.png">
     <style>
-        :root { --bg: #121212; --panel: #1e1e1e; --border: #333; --text: #fff; --primary: #1E88E5; --danger: #E53935; --warning: #FFB300; --success: #27ae60; --gray: #555; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: var(--bg); color: var(--text); margin: 0; padding: 10px; text-align: center; }
-        * { box-sizing: border-box; }
-        .hidden { display: none !important; }
-        .btn-ctrl { padding: 12px 18px; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; color: white; transition: 0.2; }
-        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .badge { background: rgba(0,0,0,0.5); padding: 2px 8px; border-radius: 10px; font-size: 0.85em; margin-left: auto; margin-right: 20px; }
-        .hotkey-hint { font-size: 0.75em; color: rgba(255,255,255,0.6); border: 1px solid rgba(255,255,255,0.3); padding: 2px 4px; border-radius: 4px; position: absolute; top: 2px; right: 2px; pointer-events: none; }
-        .view-container { max-width: 800px; margin: 0 auto; background: var(--panel); padding: 20px; border-radius: 12px; border: 1px solid var(--border); box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
-        .menu-btn { width: 100%; padding: 20px; margin: 10px 0; font-size: 1.2em; background: var(--primary); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; }
-        .menu-btn.ppda { background: #8e44ad; }
-        .menu-btn.custom { background: var(--warning); color: black; }
-        .config-row { display: flex; gap: 10px; margin-bottom: 10px; }
-        .config-row input, .config-row select { flex: 1; padding: 10px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg); color: white; }
-        #custom-tags-list { list-style: none; padding: 0; text-align: left; }
-        #custom-tags-list li { background: var(--border); margin-bottom: 5px; padding: 10px; border-radius: 6px; display: flex; justify-content: space-between; }
-        .radio-group { display: flex; justify-content: center; margin-bottom: 15px; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); }
-        .radio-group input { display: none; }
-        .radio-group label { flex: 1; padding: 10px; cursor: pointer; font-weight: bold; font-size: 0.9em; background: var(--bg); color: #888; transition: 0.3s; }
-        #mode-live:checked + label { background: var(--danger); color: white; }
-        #mode-post:checked + label { background: var(--primary); color: white; }
-        .sync-inputs { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 15px; background: var(--bg); padding: 10px; border-radius: 8px; border: 1px solid var(--border); }
-        .sync-inputs label { font-size: 0.7em; color: #aaa; display: block; margin-bottom: 4px; }
-        .sync-inputs input, .sync-inputs select { width: 100%; padding: 6px; border-radius: 4px; border: 1px solid var(--gray); background: #111; color: var(--warning); font-family: monospace; text-align: center; }
-        #timer { font-size: 4em; font-weight: bold; margin: 5px 0; font-variant-numeric: tabular-nums; color: var(--warning); cursor: pointer; }
-        .timer-controls { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
-        .action-btn { position: relative; width: 100%; padding: 15px 10px; margin-bottom: 10px; font-size: 1em; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; display: flex; align-items: center; color: white; }
-        .btn-home { background-color: var(--primary); }
-        .btn-away { background-color: var(--danger); }
-        .grid-possession { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 15px; }
-        .pos-box { padding: 15px; border-radius: 8px; cursor: pointer; opacity: 0.4; border: 3px solid transparent; position: relative; }
-        .pos-box h3 { margin: 0 0 5px 0; font-size: 1.1em; }
-        .active-possession { opacity: 1; border-color: var(--warning); box-shadow: 0 0 10px rgba(255, 179, 0, 0.4); transform: scale(1.02); }
-        #box-home { background: var(--primary); } #box-out { background: var(--gray); } #box-away { background: var(--danger); }
-        .pass-col { background: var(--bg); padding: 15px; border-radius: 8px; position: relative; border: 1px solid var(--border); }
-        .monitor-panel { background: var(--bg); padding: 10px; border-radius: 8px; margin-top: 20px; text-align: left; border: 1px solid var(--border); }
-        #log-list { list-style: none; padding: 0; margin: 0; }
-        #log-list li { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 0.9em; }
-        .btn-delete-log { background: none; border: none; color: var(--danger); font-size: 1.2em; cursor: pointer; }
-        .stats-panel { background: var(--bg); padding: 15px; border-radius: 8px; margin-top: 20px; border: 1px solid var(--border); }
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; text-align: left; }
-        .stats-col { background: #111; padding: 10px; border-radius: 6px; border: 1px solid var(--border); }
-        .stats-col h5 { margin: 0 0 10px 0; color: var(--warning); text-align: center; border-bottom: 1px dashed var(--gray); padding-bottom: 5px; font-size: 1.1em;}
-        .stats-row { display: flex; justify-content: space-between; font-size: 0.9em; margin-bottom: 6px; border-bottom: 1px solid #222; padding-bottom: 3px; }
-        .stats-full { grid-column: span 2; background: #111; padding: 10px; border-radius: 6px; border: 1px solid var(--border); font-size: 0.9em; text-align: center;}
-        .export-btn { width: 100%; padding: 15px; margin-top: 15px; font-size: 1.1em; background-color: var(--success); border: none; border-radius: 8px; font-weight: bold; cursor: pointer; color: white; }
+        :root {
+            --bg: #121212;
+            --panel: #1e1e1e;
+            --border: #333;
+            --text: #fff;
+            --primary: #1E88E5;
+            --danger: #E53935;
+            --warning: #FFB300;
+            --success: #27ae60;
+            --gray: #555;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 10px;
+            text-align: center;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .btn-ctrl {
+            padding: 12px 18px;
+            font-weight: bold;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            color: white;
+            transition: 0.2;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .badge {
+            background: rgba(0,0,0,0.5);
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.85em;
+            margin-left: auto;
+            margin-right: 20px;
+        }
+
+        .hotkey-hint {
+            font-size: 0.75em;
+            color: rgba(255,255,255,0.6);
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 2px 4px;
+            border-radius: 4px;
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            pointer-events: none;
+        }
+
+        .view-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: var(--panel);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+
+        .menu-btn {
+            width: 100%;
+            padding: 20px;
+            margin: 10px 0;
+            font-size: 1.2em;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+            .menu-btn.ppda {
+                background: #8e44ad;
+            }
+
+            .menu-btn.custom {
+                background: var(--warning);
+                color: black;
+            }
+
+        .config-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+            .config-row input, .config-row select {
+                flex: 1;
+                padding: 10px;
+                border-radius: 6px;
+                border: 1px solid var(--border);
+                background: var(--bg);
+                color: white;
+            }
+
+        #custom-tags-list {
+            list-style: none;
+            padding: 0;
+            text-align: left;
+        }
+
+            #custom-tags-list li {
+                background: var(--border);
+                margin-bottom: 5px;
+                padding: 10px;
+                border-radius: 6px;
+                display: flex;
+                justify-content: space-between;
+            }
+
+        .radio-group {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+
+            .radio-group input {
+                display: none;
+            }
+
+            .radio-group label {
+                flex: 1;
+                padding: 10px;
+                cursor: pointer;
+                font-weight: bold;
+                font-size: 0.9em;
+                background: var(--bg);
+                color: #888;
+                transition: 0.3s;
+            }
+
+        #mode-live:checked + label {
+            background: var(--danger);
+            color: white;
+        }
+
+        #mode-post:checked + label {
+            background: var(--primary);
+            color: white;
+        }
+
+        .sync-inputs {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+            background: var(--bg);
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+            .sync-inputs label {
+                font-size: 0.7em;
+                color: #aaa;
+                display: block;
+                margin-bottom: 4px;
+            }
+
+            .sync-inputs input, .sync-inputs select {
+                width: 100%;
+                padding: 6px;
+                border-radius: 4px;
+                border: 1px solid var(--gray);
+                background: #111;
+                color: var(--warning);
+                font-family: monospace;
+                text-align: center;
+            }
+
+        #timer {
+            font-size: 4em;
+            font-weight: bold;
+            margin: 5px 0;
+            font-variant-numeric: tabular-nums;
+            color: var(--warning);
+            cursor: pointer;
+        }
+
+        .timer-controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            position: relative;
+            width: 100%;
+            padding: 15px 10px;
+            margin-bottom: 10px;
+            font-size: 1em;
+            font-weight: bold;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            color: white;
+        }
+
+        .btn-home {
+            background-color: var(--primary);
+        }
+
+        .btn-away {
+            background-color: var(--danger);
+        }
+
+        .grid-possession {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .pos-box {
+            padding: 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            opacity: 0.4;
+            border: 3px solid transparent;
+            position: relative;
+        }
+
+            .pos-box h3 {
+                margin: 0 0 5px 0;
+                font-size: 1.1em;
+            }
+
+        .active-possession {
+            opacity: 1;
+            border-color: var(--warning);
+            box-shadow: 0 0 10px rgba(255, 179, 0, 0.4);
+            transform: scale(1.02);
+        }
+
+        #box-home {
+            background: var(--primary);
+        }
+
+        #box-out {
+            background: var(--gray);
+        }
+
+        #box-away {
+            background: var(--danger);
+        }
+
+        .pass-col {
+            background: var(--bg);
+            padding: 15px;
+            border-radius: 8px;
+            position: relative;
+            border: 1px solid var(--border);
+        }
+
+        .monitor-panel {
+            background: var(--bg);
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 20px;
+            text-align: left;
+            border: 1px solid var(--border);
+        }
+
+        #log-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+            #log-list li {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 8px 0;
+                border-bottom: 1px solid var(--border);
+                font-size: 0.9em;
+            }
+
+        .btn-delete-log {
+            background: none;
+            border: none;
+            color: var(--danger);
+            font-size: 1.2em;
+            cursor: pointer;
+        }
+
+        .stats-panel {
+            background: var(--bg);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            border: 1px solid var(--border);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            text-align: left;
+        }
+
+        .stats-col {
+            background: #111;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+        }
+
+            .stats-col h5 {
+                margin: 0 0 10px 0;
+                color: var(--warning);
+                text-align: center;
+                border-bottom: 1px dashed var(--gray);
+                padding-bottom: 5px;
+                font-size: 1.1em;
+            }
+
+        .stats-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9em;
+            margin-bottom: 6px;
+            border-bottom: 1px solid #222;
+            padding-bottom: 3px;
+        }
+
+        .stats-full {
+            grid-column: span 2;
+            background: #111;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            font-size: 0.9em;
+            text-align: center;
+        }
+
+        .export-btn {
+            width: 100%;
+            padding: 15px;
+            margin-top: 15px;
+            font-size: 1.1em;
+            background-color: var(--success);
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            color: white;
+        }
     </style>
 </head>
 <body onbeforeunload="return 'Biztosan elhagyod az oldalt?'">
@@ -111,7 +438,7 @@
                     <option value="2">2.0x</option>
                 </select>
             </div>
-			<div style="grid-column: span 3;">
+            <div style="grid-column: span 3;">
                 <label>Videó URL</label>
                 <input type="text" id="video-url" value="" placeholder="https://..." onchange="saveSync()" style="text-align: left;">
             </div>
@@ -128,11 +455,12 @@
         <div class="timer-controls">
             <button id="btn-start" class="btn-ctrl" style="background: var(--success); width: 160px;" onclick="toggleTimer()">START (Space)</button>
             <button id="btn-h2" class="btn-ctrl" style="background: var(--warning); color: black;" onclick="startSecondHalf()">MÁSODIK FÉLIDŐ START (45:00)</button>
+            <button id="btn-end" class="btn-ctrl" style="background: var(--danger);" onclick="endMatch()">MECCS VÉGE</button>
         </div>
 
         <div id="container-fieldtilt" class="grid-2 hidden"></div>
         <div id="container-custom" class="grid-2 hidden"></div>
-        
+
         <div id="container-ppda" class="hidden">
             <div class="grid-possession">
                 <div class="pos-box" id="box-home" onclick="setPossession('hazai')"><span class="hotkey-hint">1</span><h3>Hazai</h3><div id="time-home">00:00</div></div>
@@ -169,672 +497,714 @@
         <button class="export-btn" onclick="exportData()">💾 ADATOK LETÖLTÉSE (CSV)</button>
     </div>
 
-<script>
-    const PIN = "1234";
+    <script>
+        const PIN = "1234";
 
-    function getDefaultModuleState(isPPDA = false) {
-        return {
-            matchSeconds: 0,
-            isH2: false,
-            preH2Seconds: 0,
-            preH2Ref: 0,
-            eventsLog: [],
-            liveStartTimeRef: 0,
-            timerRunning: false,
-            possession: 'kint',
-            statsPPDA: isPPDA ? { passes: {hazai: 0, vendeg: 0}, currentSeq: {hazai: 0, vendeg: 0}, sequences: {hazai: [], vendeg: []}, transitions: 0 } : null
-        };
-    }
-
-    let state = {
-        module: null, 
-        mode: 'live', 
-        customTags: [],
-        modules: {
-            fieldtilt: getDefaultModuleState(),
-            ppda: getDefaultModuleState(true),
-            custom: getDefaultModuleState()
+        function getDefaultModuleState(isPPDA = false) {
+            return {
+                matchSeconds: 0,
+                isH2: false,
+                preH2Seconds: 0,
+                preH2Ref: 0,
+                eventsLog: [],
+                liveStartTimeRef: 0,
+                timerRunning: false,
+                possession: 'kint',
+                statsPPDA: isPPDA ? { passes: { hazai: 0, vendeg: 0 }, currentSeq: { hazai: 0, vendeg: 0 }, sequences: { hazai: [], vendeg: [] }, transitions: 0 } : null
+            };
         }
-    };
-    
-    let timerInterval = null;
-	let wakeLock = null;
 
-    // Képernyő ébrentartásának kérése
-    async function requestWakeLock() {
-        if ('wakeLock' in navigator) {
-            try {
-                wakeLock = await navigator.wakeLock.request('screen');
-                console.log('Képernyő ébrentartása (Wake Lock) AKTÍV');
-            } catch (err) {
-                console.error(`Wake Lock hiba: ${err.message}`);
+        let state = {
+            module: null,
+            mode: 'live',
+            customTags: [],
+            modules: {
+                fieldtilt: getDefaultModuleState(),
+                ppda: getDefaultModuleState(true),
+                custom: getDefaultModuleState()
+            }
+        };
+
+        let timerInterval = null;
+        let wakeLock = null;
+
+        // Képernyő ébrentartásának kérése
+        async function requestWakeLock() {
+            if ('wakeLock' in navigator) {
+                try {
+                    wakeLock = await navigator.wakeLock.request('screen');
+                    console.log('Képernyő ébrentartása (Wake Lock) AKTÍV');
+                } catch (err) {
+                    console.error(`Wake Lock hiba: ${err.message}`);
+                }
             }
         }
-    }
 
-    // Képernyő ébrentartásának feloldása
-    function releaseWakeLock() {
-        if (wakeLock !== null) {
-            wakeLock.release().then(() => {
-                wakeLock = null;
-                console.log('Képernyő ébrentartása FELOLDVA');
+        // Képernyő ébrentartásának feloldása
+        function releaseWakeLock() {
+            if (wakeLock !== null) {
+                wakeLock.release().then(() => {
+                    wakeLock = null;
+                    console.log('Képernyő ébrentartása FELOLDVA');
+                });
+            }
+        }
+
+        // Ha a böngészőt háttérbe teszed (pl. hívás jön), a rendszer eldobja a Wake Lock-ot.
+        // Ez a kód gondoskodik róla, hogy visszatéréskor újra aktiválódjon, ha fut az óra:
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') {
+                const anyRunning = Object.values(state.modules).some(mod => mod.timerRunning);
+                if (anyRunning) {
+                    requestWakeLock();
+                }
+            }
+        });
+        let playbackSpeed = 1;
+
+        const defaultFieldTilt = [
+            { name: 'Kapura lövés', team: 'Hazai', hotkey: 'Q' }, { name: 'Kapura lövés', team: 'Vendég', hotkey: 'U' },
+            { name: 'Gól', team: 'Hazai', hotkey: 'W' }, { name: 'Gól', team: 'Vendég', hotkey: 'I' },
+            { name: 'Szöglet', team: 'Hazai', hotkey: 'E' }, { name: 'Szöglet', team: 'Vendég', hotkey: 'O' },
+            { name: 'Tám. harmad passz', team: 'Hazai', hotkey: 'A' }, { name: 'Tám. harmad passz', team: 'Vendég', hotkey: 'J' },
+            { name: 'Les', team: 'Hazai', hotkey: 'S' }, { name: 'Les', team: 'Vendég', hotkey: 'K' },
+            { name: 'Falt', team: 'Hazai', hotkey: 'D' }, { name: 'Falt', team: 'Vendég', hotkey: 'L' }
+        ];
+
+        function switchView(viewId) {
+            document.querySelectorAll('.view-container').forEach(v => v.classList.add('hidden'));
+            document.getElementById(viewId).classList.remove('hidden');
+        }
+
+        function showCustomConfig() {
+            switchView('view-config');
+            renderCustomTags();
+        }
+
+        function backToMenu() {
+            switchView('view-menu');
+            // Visszalépéskor a háttérben futó órákat NEM állítjuk meg
+        }
+
+        function initModule(mod) {
+            if (mod === 'custom' && state.customTags.length === 0) {
+                alert("Adj hozzá legalább egy címkét!"); return;
+            }
+
+            const saved = localStorage.getItem('pro_tracker_state_hu_v2'); // Új struktúra miatti új kulcs
+
+            if (saved && !window.hasLoadedSave) {
+                const parsed = JSON.parse(saved);
+                let hasData = Object.values(parsed.modules).some(m => m.eventsLog.length > 0 || m.matchSeconds > 0);
+
+                if (hasData) {
+                    if (confirm("Szeretnéd folytatni az elmentett munkameneteket?")) {
+                        Object.assign(state, parsed);
+                        document.getElementById('sync-h1').value = localStorage.getItem('pro_syncH1_hu') || "00:00";
+                        document.getElementById('sync-h2').value = localStorage.getItem('pro_syncH2_hu') || "45:00";
+                        document.getElementById('video-url').value = localStorage.getItem('pro_videoUrl_hu') || "";
+                        if (state.mode === 'post') document.getElementById('mode-post').checked = true;
+                        else document.getElementById('mode-live').checked = true;
+
+                        if (Object.values(state.modules).some(m => m.timerRunning)) {
+                            timerInterval = setInterval(globalTick, 1000 / playbackSpeed);
+                        }
+                    }
+                }
+                window.hasLoadedSave = true;
+            }
+            window.hasLoadedSave = true;
+
+            state.module = mod;
+            const m = state.modules[mod];
+            let moduleTitle = mod === 'fieldtilt' ? "MECCS ESEMÉNYEK" : (mod === 'ppda' ? "PPDA & BIRTOKLÁS" : "EGYEDI");
+            document.getElementById('module-title').innerText = moduleTitle;
+
+            document.getElementById('container-fieldtilt').classList.add('hidden');
+            document.getElementById('container-ppda').classList.add('hidden');
+            document.getElementById('container-custom').classList.add('hidden');
+
+            if (mod === 'fieldtilt') buildEventGrid('container-fieldtilt', defaultFieldTilt);
+            if (mod === 'custom') buildEventGrid('container-custom', state.customTags);
+            if (mod === 'ppda') { document.getElementById('container-ppda').classList.remove('hidden'); updatePPDA_UI(); }
+
+            handleModeChange(true);
+            updateStartBtnUI();
+            updateTimerDisplay();
+            renderLog();
+            updateStatsUI();
+            switchView('view-tracker');
+
+            if (m.isH2) document.getElementById('btn-h2').classList.add('hidden');
+            else document.getElementById('btn-h2').classList.remove('hidden');
+
+            saveState();
+        }
+
+        function buildEventGrid(containerId, tags) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '<div class="home-col" id="col-home-' + containerId + '"></div><div class="away-col" id="col-away-' + containerId + '"></div>';
+            const colH = document.getElementById('col-home-' + containerId);
+            const colA = document.getElementById('col-away-' + containerId);
+
+            tags.forEach(t => {
+                const btn = document.createElement('button');
+                btn.className = `action-btn ${t.team === 'Hazai' ? 'btn-home' : 'btn-away'}`;
+                btn.innerHTML = `${t.name} <span class="hotkey-hint">${t.hotkey}</span> <span class="badge" data-tag="${t.name}" data-team="${t.team}">0</span>`;
+                btn.onclick = () => logStandardEvent(t.team, t.name);
+                if (t.team === 'Hazai') colH.appendChild(btn); else colA.appendChild(btn);
+            });
+            container.classList.remove('hidden');
+            updateBadges();
+        }
+
+        function addCustomTag() {
+            const name = document.getElementById('custom-name').value.trim();
+            const hk = document.getElementById('custom-hotkey').value.trim().toUpperCase();
+            const team = document.getElementById('custom-team').value;
+            if (!name || !hk) return alert("Név és gomb kötelező!");
+            if (hk === 'Z') return alert("A 'Z' billentyű foglalt a visszavonáshoz!");
+            state.customTags.push({ name, hotkey: hk, team });
+            document.getElementById('custom-name').value = '';
+            document.getElementById('custom-hotkey').value = '';
+            renderCustomTags();
+        }
+
+        function renderCustomTags() {
+            const list = document.getElementById('custom-tags-list'); list.innerHTML = '';
+            state.customTags.forEach((t, i) => {
+                list.innerHTML += `<li><span><b>[${t.hotkey}]</b> ${t.team} - ${t.name}</span> <button class="btn-delete-log" onclick="state.customTags.splice(${i}, 1); renderCustomTags();">X</button></li>`;
             });
         }
-    }
 
-    // Ha a böngészőt háttérbe teszed (pl. hívás jön), a rendszer eldobja a Wake Lock-ot.
-    // Ez a kód gondoskodik róla, hogy visszatéréskor újra aktiválódjon, ha fut az óra:
-    document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'visible') {
-            const anyRunning = Object.values(state.modules).some(mod => mod.timerRunning);
-            if (anyRunning) {
-                requestWakeLock();
+        function saveConfig() {
+            const blob = new Blob([JSON.stringify(state.customTags)], { type: 'application/json' });
+            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'egyedi_cimkek.json'; a.click();
+        }
+
+        function loadConfig(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                try { state.customTags = JSON.parse(e.target.result); renderCustomTags(); }
+                catch { alert("Hibás fájl!"); }
+            };
+            reader.readAsText(file);
+        }
+
+        function timeToSeconds(timeStr, defaultValue = 0) {
+            if (!timeStr || !timeStr.includes(':')) return defaultValue;
+            const p = timeStr.trim().split(':');
+            return (parseInt(p[0]) * 60) + (parseInt(p[1]) || 0);
+        }
+
+        function formatTime(s) {
+            const m = Math.floor(s / 60); const sec = s % 60;
+            return `${m.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
+        }
+
+        function getMatchTimeLabel(sec, isH2) {
+            if (!isH2) return sec <= 2700 ? formatTime(sec) : `45:00 +${sec - 2700}mp`;
+            else return sec <= 5400 ? formatTime(sec) : `90:00 +${sec - 5400}mp`;
+        }
+
+        function handleModeChange(isRestoring = false) {
+            const isPost = document.getElementById('mode-post').checked;
+            const newMode = isPost ? 'post' : 'live';
+
+            // Ha még nincs kiválasztva modul (pl. betöltéskor), csak átállítjuk a módot
+            if (!state.module) {
+                state.mode = newMode;
+                return;
             }
-        }
-    });
-    let playbackSpeed = 1;
 
-    const defaultFieldTilt = [
-        { name: 'Kapura lövés', team: 'Hazai', hotkey: 'Q' }, { name: 'Kapura lövés', team: 'Vendég', hotkey: 'U' },
-        { name: 'Gól', team: 'Hazai', hotkey: 'W' }, { name: 'Gól', team: 'Vendég', hotkey: 'I' },
-        { name: 'Szöglet', team: 'Hazai', hotkey: 'E' }, { name: 'Szöglet', team: 'Vendég', hotkey: 'O' },
-        { name: 'Tám. harmad passz', team: 'Hazai', hotkey: 'A' }, { name: 'Tám. harmad passz', team: 'Vendég', hotkey: 'J' },
-        { name: 'Les', team: 'Hazai', hotkey: 'S' }, { name: 'Les', team: 'Vendég', hotkey: 'K' },
-        { name: 'Falt', team: 'Hazai', hotkey: 'D' }, { name: 'Falt', team: 'Vendég', hotkey: 'L' }
-    ];
+            const m = state.modules[state.module];
 
-    function switchView(viewId) {
-        document.querySelectorAll('.view-container').forEach(v => v.classList.add('hidden'));
-        document.getElementById(viewId).classList.remove('hidden');
-    }
+            let hasData = m.eventsLog.length > 0 || m.matchSeconds > 0;
 
-    function showCustomConfig() {
-        switchView('view-config');
-        renderCustomTags();
-    }
+            if (!isRestoring && hasData && newMode !== state.mode) {
+                if (confirm(`Biztosan módot váltasz? Ez törölni fogja az eddigi adatokat!`)) {
+                    if (prompt(`Módváltás megerősítése. Írd be a kódot: ${PIN}`) === PIN) {
+                        // ÚJ: CSAK az aktuális modult reseteljük, a többi megmarad
+                        const isPPDA = state.module === 'ppda';
+                        state.modules[state.module] = getDefaultModuleState(isPPDA);
 
-    function backToMenu() {
-        switchView('view-menu');
-        // Visszalépéskor a háttérben futó órákat NEM állítjuk meg
-    }
+                        // UI elemek vizuális nullázása a képernyőn
+                        document.getElementById('btn-h2').classList.remove('hidden');
+                        updateTimerDisplay();
+                        renderLog();
+                        updateBadges();
+                        if (state.module === 'ppda') updatePPDA_UI();
+                        updateStatsUI();
 
-    function initModule(mod) {
-        if(mod === 'custom' && state.customTags.length === 0) {
-            alert("Adj hozzá legalább egy címkét!"); return;
-        }
-
-        const saved = localStorage.getItem('pro_tracker_state_hu_v2'); // Új struktúra miatti új kulcs
-        
-        if (saved && !window.hasLoadedSave) {
-            const parsed = JSON.parse(saved);
-            let hasData = Object.values(parsed.modules).some(m => m.eventsLog.length > 0 || m.matchSeconds > 0);
-            
-            if (hasData) {
-                if (confirm("Szeretnéd folytatni az elmentett munkameneteket?")) {
-                    Object.assign(state, parsed);
-                    document.getElementById('sync-h1').value = localStorage.getItem('pro_syncH1_hu') || "00:00";
-                    document.getElementById('sync-h2').value = localStorage.getItem('pro_syncH2_hu') || "45:00";
-                    document.getElementById('video-url').value = localStorage.getItem('pro_videoUrl_hu') || "";
-                    if(state.mode === 'post') document.getElementById('mode-post').checked = true;
-                    else document.getElementById('mode-live').checked = true;
-                    
-                    if (Object.values(state.modules).some(m => m.timerRunning)) {
-                        timerInterval = setInterval(globalTick, 1000 / playbackSpeed);
+                        // Ha ezzel az utolsó futó órát is kilőttük, álljon le a fő ticker és a Wake Lock
+                        if (!Object.values(state.modules).some(mod => mod.timerRunning)) {
+                            if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+                            if (typeof releaseWakeLock === 'function') releaseWakeLock();
+                        }
+                    } else {
+                        // Hibás kód esetén visszadobjuk a rádiógombot
+                        document.getElementById(`mode-${state.mode}`).checked = true; return;
                     }
+                } else {
+                    // Mégsem gomb esetén visszadobjuk a rádiógombot
+                    document.getElementById(`mode-${state.mode}`).checked = true; return;
                 }
             }
-            window.hasLoadedSave = true; 
-        }
-        window.hasLoadedSave = true;
 
-        state.module = mod;
-        const m = state.modules[mod];
-        let moduleTitle = mod === 'fieldtilt' ? "MECCS ESEMÉNYEK" : (mod === 'ppda' ? "PPDA & BIRTOKLÁS" : "EGYEDI");
-        document.getElementById('module-title').innerText = moduleTitle;
-        
-        document.getElementById('container-fieldtilt').classList.add('hidden');
-        document.getElementById('container-ppda').classList.add('hidden');
-        document.getElementById('container-custom').classList.add('hidden');
-        
-        if(mod === 'fieldtilt') buildEventGrid('container-fieldtilt', defaultFieldTilt);
-        if(mod === 'custom') buildEventGrid('container-custom', state.customTags);
-        if(mod === 'ppda') { document.getElementById('container-ppda').classList.remove('hidden'); updatePPDA_UI(); }
-        
-        handleModeChange(true);
-        updateStartBtnUI();
-        updateTimerDisplay();
-        renderLog();
-        updateStatsUI(); 
-        switchView('view-tracker');
-
-        if(m.isH2) document.getElementById('btn-h2').classList.add('hidden');
-        else document.getElementById('btn-h2').classList.remove('hidden');
-
-        saveState();
-    }
-
-    function buildEventGrid(containerId, tags) {
-        const container = document.getElementById(containerId);
-        container.innerHTML = '<div class="home-col" id="col-home-'+containerId+'"></div><div class="away-col" id="col-away-'+containerId+'"></div>';
-        const colH = document.getElementById('col-home-'+containerId);
-        const colA = document.getElementById('col-away-'+containerId);
-        
-        tags.forEach(t => {
-            const btn = document.createElement('button');
-            btn.className = `action-btn ${t.team === 'Hazai' ? 'btn-home' : 'btn-away'}`;
-            btn.innerHTML = `${t.name} <span class="hotkey-hint">${t.hotkey}</span> <span class="badge" data-tag="${t.name}" data-team="${t.team}">0</span>`;
-            btn.onclick = () => logStandardEvent(t.team, t.name);
-            if(t.team === 'Hazai') colH.appendChild(btn); else colA.appendChild(btn);
-        });
-        container.classList.remove('hidden');
-        updateBadges();
-    }
-
-    function addCustomTag() {
-        const name = document.getElementById('custom-name').value.trim();
-        const hk = document.getElementById('custom-hotkey').value.trim().toUpperCase();
-        const team = document.getElementById('custom-team').value;
-        if(!name || !hk) return alert("Név és gomb kötelező!");
-        if(hk === 'Z') return alert("A 'Z' billentyű foglalt a visszavonáshoz!");
-        state.customTags.push({ name, hotkey: hk, team });
-        document.getElementById('custom-name').value = '';
-        document.getElementById('custom-hotkey').value = '';
-        renderCustomTags();
-    }
-    
-    function renderCustomTags() {
-        const list = document.getElementById('custom-tags-list'); list.innerHTML = '';
-        state.customTags.forEach((t, i) => {
-            list.innerHTML += `<li><span><b>[${t.hotkey}]</b> ${t.team} - ${t.name}</span> <button class="btn-delete-log" onclick="state.customTags.splice(${i}, 1); renderCustomTags();">X</button></li>`;
-        });
-    }
-
-    function saveConfig() {
-        const blob = new Blob([JSON.stringify(state.customTags)], { type: 'application/json' });
-        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'egyedi_cimkek.json'; a.click();
-    }
-
-    function loadConfig(e) {
-        const file = e.target.files[0];
-        if(!file) return;
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            try { state.customTags = JSON.parse(e.target.result); renderCustomTags(); } 
-            catch { alert("Hibás fájl!"); }
-        };
-        reader.readAsText(file);
-    }
-
-    function timeToSeconds(timeStr, defaultValue = 0) {
-        if (!timeStr || !timeStr.includes(':')) return defaultValue;
-        const p = timeStr.trim().split(':');
-        return (parseInt(p[0]) * 60) + (parseInt(p[1]) || 0);
-    }
-
-    function formatTime(s) {
-        const m = Math.floor(s / 60); const sec = s % 60;
-        return `${m.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
-    }
-
-    function getMatchTimeLabel(sec, isH2) {
-        if (!isH2) return sec <= 2700 ? formatTime(sec) : `45:00 +${sec-2700}mp`;
-        else return sec <= 5400 ? formatTime(sec) : `90:00 +${sec-5400}mp`;
-    }
-
-    function handleModeChange(isRestoring = false) {
-        const isPost = document.getElementById('mode-post').checked;
-        const newMode = isPost ? 'post' : 'live';
-        
-        // Ha még nincs kiválasztva modul (pl. betöltéskor), csak átállítjuk a módot
-        if (!state.module) {
             state.mode = newMode;
-            return;
+
+            updateStartBtnUI();
+            document.getElementById('seek-container').classList.toggle('hidden', state.mode === 'live');
+            document.getElementById('sync-container').classList.toggle('hidden', state.mode === 'live');
+            saveState();
         }
 
-        const m = state.modules[state.module];
-        
-        let hasData = m.eventsLog.length > 0 || m.matchSeconds > 0;
-        
-        if(!isRestoring && hasData && newMode !== state.mode) {
-            if(confirm(`Biztosan módot váltasz? Ez törölni fogja az eddigi adatokat!`)) {
-                if(prompt(`Módváltás megerősítése. Írd be a kódot: ${PIN}`) === PIN) { 
-                    // ÚJ: CSAK az aktuális modult reseteljük, a többi megmarad
-                    const isPPDA = state.module === 'ppda';
-                    state.modules[state.module] = getDefaultModuleState(isPPDA);
-                    
-                    // UI elemek vizuális nullázása a képernyőn
-                    document.getElementById('btn-h2').classList.remove('hidden');
-                    updateTimerDisplay();
-                    renderLog();
-                    updateBadges();
-                    if(state.module === 'ppda') updatePPDA_UI();
-                    updateStatsUI();
-
-                    // Ha ezzel az utolsó futó órát is kilőttük, álljon le a fő ticker és a Wake Lock
-                    if (!Object.values(state.modules).some(mod => mod.timerRunning)) {
-                        if(timerInterval) { clearInterval(timerInterval); timerInterval = null; }
-                        if (typeof releaseWakeLock === 'function') releaseWakeLock();
-                    }
-                } else { 
-                    // Hibás kód esetén visszadobjuk a rádiógombot
-                    document.getElementById(`mode-${state.mode}`).checked = true; return; 
-                }
+        function toggleTimer() {
+            const m = state.modules[state.module];
+            if (m.timerRunning) {
+                if (state.mode === 'live') return alert("Élő módban az óra nem állítható meg!");
+                stopTimer();
             } else {
-                // Mégsem gomb esetén visszadobjuk a rádiógombot
-                document.getElementById(`mode-${state.mode}`).checked = true; return;
+                startTimer();
             }
         }
-        
-        state.mode = newMode;
-        
-        updateStartBtnUI();
-        document.getElementById('seek-container').classList.toggle('hidden', state.mode === 'live');
-        document.getElementById('sync-container').classList.toggle('hidden', state.mode === 'live');
-        saveState();
-    }
 
-    function toggleTimer() {
-        const m = state.modules[state.module];
-        if (m.timerRunning) {
-            if (state.mode === 'live') return alert("Élő módban az óra nem állítható meg!");
-            stopTimer();
-        } else {
-            startTimer();
-        }
-    }
+        function startTimer() {
+            const m = state.modules[state.module];
+            if (m.timerRunning) return;
+            m.timerRunning = true;
 
-    function startTimer() {
-        const m = state.modules[state.module];
-        if (m.timerRunning) return;
-        m.timerRunning = true;
-        
-        if (state.mode === 'live') {
-            if (!m.liveStartTimeRef) m.liveStartTimeRef = Date.now() - (m.matchSeconds * 1000);
-        }
-        
-        updateStartBtnUI();
-        if(!timerInterval) timerInterval = setInterval(globalTick, 1000 / playbackSpeed);
-        requestWakeLock();
-		saveState();
-    }
+            if (state.mode === 'live') {
+                if (!m.liveStartTimeRef) m.liveStartTimeRef = Date.now() - (m.matchSeconds * 1000);
+            }
 
-    function stopTimer() {
-        const m = state.modules[state.module];
-        m.timerRunning = false;
-        updateStartBtnUI();
-        
-        let anyRunning = Object.values(state.modules).some(mod => mod.timerRunning);
-        if(!anyRunning) {
-            clearInterval(timerInterval);
-            timerInterval = null;
-            
-            // FELOLDJUK A KÉPERNYŐ ÉBRENTARTÁSÁT
-            releaseWakeLock();
+            updateStartBtnUI();
+            if (!timerInterval) timerInterval = setInterval(globalTick, 1000 / playbackSpeed);
+            requestWakeLock();
+            saveState();
         }
-        saveState();
-    }
-    
-    function updateStartBtnUI() {
-        if(!state.module) return;
-        const m = state.modules[state.module];
-        const btn = document.getElementById('btn-start');
-        
-        if (m.timerRunning) {
-            btn.innerText = (state.mode === 'live') ? "ÉLŐ - FUT..." : "SZÜNET (Space)";
-            btn.style.background = "#e67e22";
-        } else {
-            btn.innerText = "START (Space)";
-            btn.style.background = "var(--success)";
-        }
-    }
 
-    // Fő óra intervallum (Párhuzamos módhoz)
-    function globalTick() {
-        let anyRunning = false;
-        Object.values(state.modules).forEach(m => {
+        function stopTimer() {
+            const m = state.modules[state.module];
+            m.timerRunning = false;
+            updateStartBtnUI();
+
+            let anyRunning = Object.values(state.modules).some(mod => mod.timerRunning);
+            if (!anyRunning) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+
+                // FELOLDJUK A KÉPERNYŐ ÉBRENTARTÁSÁT
+                releaseWakeLock();
+            }
+            saveState();
+        }
+
+        function endMatch() {
+            if (confirm("Biztosan befejezed a kódolást? Az óra leáll és indul az exportálás.")) {
+                const m = state.modules[state.module];
+                if (m.timerRunning) {
+                    stopTimer(); // Leállítja az órát az aktuális modulban
+                }
+                exportData(); // Meghívja az exportálást
+            }
+        }
+
+        function updateStartBtnUI() {
+            if (!state.module) return;
+            const m = state.modules[state.module];
+            const btn = document.getElementById('btn-start');
+
             if (m.timerRunning) {
-                anyRunning = true;
+                btn.innerText = (state.mode === 'live') ? "ÉLŐ - FUT..." : "SZÜNET (Space)";
+                btn.style.background = "#e67e22";
+            } else {
+                btn.innerText = "START (Space)";
+                btn.style.background = "var(--success)";
+            }
+        }
+
+        // Fő óra intervallum (Párhuzamos módhoz)
+        function globalTick() {
+            let anyRunning = false;
+            Object.values(state.modules).forEach(m => {
+                if (m.timerRunning) {
+                    anyRunning = true;
+                    if (state.mode === 'live') {
+                        m.matchSeconds = Math.floor((Date.now() - m.liveStartTimeRef) / 1000);
+                    } else {
+                        m.matchSeconds++;
+                    }
+                }
+            });
+
+            if (!anyRunning && timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+
+            if (state.module) {
+                updateTimerDisplay();
+                if (state.module === 'ppda') updatePPDA_UI();
+                const m = state.modules[state.module];
+                if (m.matchSeconds % 5 === 0) saveState();
+            }
+        }
+
+        function startSecondHalf() {
+            if (confirm("Biztosan elindítod a második félidőt ebben a modulban? Az óra 45:00-ra ugrik.")) {
+                const m = state.modules[state.module];
+                m.preH2Seconds = m.matchSeconds;
+                m.preH2Ref = m.liveStartTimeRef;
+                m.isH2 = true;
+                m.matchSeconds = 2700;
+                if (state.mode === 'live') m.liveStartTimeRef = Date.now() - (2700 * 1000);
+
+                logEvent("Rendszer", "Második félidő");
+                document.getElementById('btn-h2').classList.add('hidden');
+                updateTimerDisplay(); saveState();
+            }
+        }
+
+        function seekTime(s) {
+            if (state.mode !== 'post') return;
+            const m = state.modules[state.module];
+            m.matchSeconds = Math.max(0, m.matchSeconds + s);
+            updateTimerDisplay(); saveState();
+        }
+
+        function editTimeManual() {
+            if (state.mode === 'live') return alert("Élő módban kézi időállítás nem lehetséges!");
+            const m = state.modules[state.module];
+            let input = prompt("Idő (pp:mp):", formatTime(m.matchSeconds));
+            if (input) {
+                m.matchSeconds = timeToSeconds(input, m.matchSeconds);
+                updateTimerDisplay(); saveState();
+            }
+        }
+
+        function updateSpeed() {
+            playbackSpeed = parseFloat(document.getElementById('speedSelect').value);
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = setInterval(globalTick, 1000 / playbackSpeed);
+            }
+        }
+
+        function saveSync() {
+            localStorage.setItem('pro_syncH1_hu', document.getElementById('sync-h1').value);
+            localStorage.setItem('pro_syncH2_hu', document.getElementById('sync-h2').value);
+            localStorage.setItem('pro_videoUrl_hu', document.getElementById('video-url').value);
+        }
+
+        function updateTimerDisplay() {
+            if (!state.module) return;
+            const m = state.modules[state.module];
+            document.getElementById('timer').innerText = getMatchTimeLabel(m.matchSeconds, m.isH2);
+        }
+
+        function logStandardEvent(team, action) {
+            logEvent(team, action);
+            updateBadges();
+        }
+
+        function logEvent(team, action, detail = "") {
+            const m = state.modules[state.module];
+            const timeLabel = getMatchTimeLabel(m.matchSeconds, m.isH2);
+            m.eventsLog.push({ id: Date.now(), matchTime: timeLabel, rawSec: m.matchSeconds, isH2: m.isH2, team, action, detail });
+            renderLog(); saveState();
+        }
+
+        function renderLog() {
+            const m = state.modules[state.module];
+            const list = document.getElementById('log-list'); list.innerHTML = '';
+            m.eventsLog.slice(-4).reverse().forEach(e => {
+                let teamName = e.team === 'hazai' ? 'Hazai' : (e.team === 'vendeg' ? 'Vendég' : e.team);
+                // Kivezetve a törlés gomb, csak a listaelem marad
+                list.innerHTML += `<li><span><b>[${e.matchTime}]</b> ${teamName} - ${e.action} ${e.detail}</span></li>`;
+            });
+        }
+
+        function undoLastEvent() {
+            const m = state.modules[state.module];
+            if (m.eventsLog.length === 0) return; // Nincs mit visszavonni
+
+            // Mindig az utolsó elemet nézzük
+            const ev = m.eventsLog[m.eventsLog.length - 1];
+
+            if (ev.action === "Második félidő") {
+                m.isH2 = false;
                 if (state.mode === 'live') {
+                    m.liveStartTimeRef = m.preH2Ref;
                     m.matchSeconds = Math.floor((Date.now() - m.liveStartTimeRef) / 1000);
                 } else {
-                    m.matchSeconds++;
+                    m.matchSeconds = m.preH2Seconds;
+                }
+                document.getElementById('btn-h2').classList.remove('hidden');
+            } else if (state.mode === 'post') {
+                m.matchSeconds = ev.rawSec;
+            }
+
+            if (state.module === 'ppda') {
+                if (ev.action === "Sikeres Passz") { m.statsPPDA.passes[ev.team]--; m.statsPPDA.currentSeq[ev.team]--; }
+                else if (ev.action === "Szekvencia Vége") { m.statsPPDA.currentSeq[ev.team] = m.statsPPDA.sequences[ev.team].pop(); }
+                else if (ev.action === "Birtoklás váltás") {
+                    // Megkeresi az előző (utolsó előtti) birtoklás váltást
+                    m.possession = m.eventsLog.slice(0, -1).reverse().find(e => e.action === "Birtoklás váltás")?.detail || 'kint';
                 }
             }
-        });
-        
-        if (!anyRunning && timerInterval) {
-            clearInterval(timerInterval);
-            timerInterval = null;
+
+            // Töröljük a legutolsó eseményt a tömb végéről
+            m.eventsLog.pop();
+
+            renderLog(); updateBadges(); if (state.module === 'ppda') updatePPDA_UI(); updateTimerDisplay(); saveState();
         }
-        
-        if (state.module) {
-            updateTimerDisplay();
-            if(state.module === 'ppda') updatePPDA_UI();
+
+        function updateBadges() {
+            if (state.module === 'ppda') return;
             const m = state.modules[state.module];
-            if(m.matchSeconds % 5 === 0) saveState();
-        }
-    }
-
-    function startSecondHalf() {
-        if(confirm("Biztosan elindítod a második félidőt ebben a modulban? Az óra 45:00-ra ugrik.")) {
-            const m = state.modules[state.module];
-            m.preH2Seconds = m.matchSeconds;
-            m.preH2Ref = m.liveStartTimeRef;
-            m.isH2 = true;
-            m.matchSeconds = 2700;
-            if (state.mode === 'live') m.liveStartTimeRef = Date.now() - (2700 * 1000);
-            
-            logEvent("Rendszer", "Második félidő");
-            document.getElementById('btn-h2').classList.add('hidden');
-            updateTimerDisplay(); saveState();
-        }
-    }
-
-    function seekTime(s) {
-        if(state.mode !== 'post') return;
-        const m = state.modules[state.module];
-        m.matchSeconds = Math.max(0, m.matchSeconds + s);
-        updateTimerDisplay(); saveState();
-    }
-
-    function editTimeManual() {
-        if(state.mode === 'live') return alert("Élő módban kézi időállítás nem lehetséges!");
-        const m = state.modules[state.module];
-        let input = prompt("Idő (pp:mp):", formatTime(m.matchSeconds));
-        if (input) {
-            m.matchSeconds = timeToSeconds(input, m.matchSeconds);
-            updateTimerDisplay(); saveState();
-        }
-    }
-
-    function updateSpeed() {
-        playbackSpeed = parseFloat(document.getElementById('speedSelect').value);
-        if(timerInterval) { 
-            clearInterval(timerInterval); 
-            timerInterval = setInterval(globalTick, 1000 / playbackSpeed); 
-        }
-    }
-
-    function saveSync() {
-        localStorage.setItem('pro_syncH1_hu', document.getElementById('sync-h1').value);
-        localStorage.setItem('pro_syncH2_hu', document.getElementById('sync-h2').value);
-        localStorage.setItem('pro_videoUrl_hu', document.getElementById('video-url').value);
-    }
-
-    function updateTimerDisplay() {
-        if(!state.module) return;
-        const m = state.modules[state.module];
-        document.getElementById('timer').innerText = getMatchTimeLabel(m.matchSeconds, m.isH2);
-    }
-
-    function logStandardEvent(team, action) {
-        logEvent(team, action);
-        updateBadges();
-    }
-
-    function logEvent(team, action, detail="") {
-        const m = state.modules[state.module];
-        const timeLabel = getMatchTimeLabel(m.matchSeconds, m.isH2);
-        m.eventsLog.push({ id: Date.now(), matchTime: timeLabel, rawSec: m.matchSeconds, isH2: m.isH2, team, action, detail });
-        renderLog(); saveState();
-    }
-
-    function renderLog() {
-        const m = state.modules[state.module];
-        const list = document.getElementById('log-list'); list.innerHTML = '';
-        m.eventsLog.slice(-4).reverse().forEach(e => {
-            let teamName = e.team === 'hazai' ? 'Hazai' : (e.team === 'vendeg' ? 'Vendég' : e.team);
-            // Kivezetve a törlés gomb, csak a listaelem marad
-            list.innerHTML += `<li><span><b>[${e.matchTime}]</b> ${teamName} - ${e.action} ${e.detail}</span></li>`;
-        });
-    }
-
-    function undoLastEvent() {
-        const m = state.modules[state.module];
-        if(m.eventsLog.length === 0) return; // Nincs mit visszavonni
-        
-        // Mindig az utolsó elemet nézzük
-        const ev = m.eventsLog[m.eventsLog.length - 1];
-        
-        if (ev.action === "Második félidő") {
-            m.isH2 = false;
-            if (state.mode === 'live') {
-                m.liveStartTimeRef = m.preH2Ref;
-                m.matchSeconds = Math.floor((Date.now() - m.liveStartTimeRef) / 1000);
-            } else {
-                m.matchSeconds = m.preH2Seconds;
-            }
-            document.getElementById('btn-h2').classList.remove('hidden');
-        } else if (state.mode === 'post') {
-            m.matchSeconds = ev.rawSec;
-        }
-
-        if(state.module === 'ppda') {
-            if (ev.action === "Sikeres Passz") { m.statsPPDA.passes[ev.team]--; m.statsPPDA.currentSeq[ev.team]--; }
-            else if (ev.action === "Szekvencia Vége") { m.statsPPDA.currentSeq[ev.team] = m.statsPPDA.sequences[ev.team].pop(); }
-            else if (ev.action === "Birtoklás váltás") { 
-                // Megkeresi az előző (utolsó előtti) birtoklás váltást
-                m.possession = m.eventsLog.slice(0, -1).reverse().find(e=>e.action==="Birtoklás váltás")?.detail || 'kint'; 
-            }
-        }
-
-        // Töröljük a legutolsó eseményt a tömb végéről
-        m.eventsLog.pop();
-        
-        renderLog(); updateBadges(); if(state.module === 'ppda') updatePPDA_UI(); updateTimerDisplay(); saveState();
-    }
-	
-    function updateBadges() {
-        if(state.module === 'ppda') return;
-        const m = state.modules[state.module];
-        document.querySelectorAll('.badge').forEach(b => {
-            const team = b.getAttribute('data-team'); const action = b.getAttribute('data-tag');
-            b.innerText = m.eventsLog.filter(e => e.team === team && e.action === action).length;
-        });
-        updateStatsUI(); 
-    }
-
-    function updateStatsUI() {
-        const panel = document.getElementById('stats-panel');
-        const content = document.getElementById('stats-content');
-        if (!state.module) { panel.classList.add('hidden'); return; }
-        panel.classList.remove('hidden');
-
-        const m = state.modules[state.module];
-
-        if (state.module === 'ppda') {
-            let tl = calcPPDATimeline();
-            const inPlay = tl.hazai + tl.vendeg;
-            const hP = inPlay > 0 ? Math.round((tl.hazai/inPlay)*100) : 0;
-            const vP = inPlay > 0 ? Math.round((tl.vendeg/inPlay)*100) : 0;
-            const getPPDA = (opp) => { const oppS = m.statsPPDA.sequences[opp].length; return oppS>0 ? (m.statsPPDA.passes[opp]/oppS).toFixed(2) : "N/A"; };
-            const getMaxSeq = (team) => m.statsPPDA.sequences[team].length ? Math.max(...m.statsPPDA.sequences[team]) : 0;
-            const getAvgSeq = (team) => {
-                const seqs = m.statsPPDA.sequences[team];
-                return seqs.length ? (seqs.reduce((a, b) => a + b, 0) / seqs.length).toFixed(1) : "0.0";
-            };
-            content.innerHTML = `<div class="stats-grid"><div class="stats-col"><h5>HAZAI</h5><div class="stats-row"><span>Birtoklás:</span> <strong>${hP}% (${formatTime(tl.hazai)})</strong></div><div class="stats-row"><span>Passz:</span> <strong>${m.statsPPDA.passes.hazai}</strong></div><div class="stats-row"><span>Átlag szekv.:</span> <strong>${getAvgSeq('hazai')}</strong></div><div class="stats-row"><span>Max szekv.:</span> <strong>${getMaxSeq('hazai')}</strong></div><div class="stats-row"><span>PPDA (V ellen):</span> <strong>${getPPDA('vendeg')}</strong></div></div><div class="stats-col"><h5>VENDÉG</h5><div class="stats-row"><span>Birtoklás:</span> <strong>${vP}% (${formatTime(tl.vendeg)})</strong></div><div class="stats-row"><span>Passz:</span> <strong>${m.statsPPDA.passes.vendeg}</strong></div><div class="stats-row"><span>Átlag szekv.:</span> <strong>${getAvgSeq('vendeg')}</strong></div><div class="stats-row"><span>Max szekv.:</span> <strong>${getMaxSeq('vendeg')}</strong></div><div class="stats-row"><span>PPDA (H ellen):</span> <strong>${getPPDA('hazai')}</strong></div></div></div>`;
-        } else {
-            const tags = state.module === 'fieldtilt' ? defaultFieldTilt : state.customTags;
-            const uniqueNames = [...new Set(tags.map(t=>t.name))];
-            let hHTML = ''; let vHTML = '';
-            uniqueNames.forEach(name => {
-                const hC = m.eventsLog.filter(e=>(e.team==='Hazai' || e.team==='hazai') && e.action===name).length;
-                const vC = m.eventsLog.filter(e=>(e.team==='Vendég' || e.team==='vendeg') && e.action===name).length;
-                hHTML += `<div class="stats-row"><span>${name}:</span> <strong>${hC}</strong></div>`;
-                vHTML += `<div class="stats-row"><span>${name}:</span> <strong>${vC}</strong></div>`;
+            document.querySelectorAll('.badge').forEach(b => {
+                const team = b.getAttribute('data-team'); const action = b.getAttribute('data-tag');
+                b.innerText = m.eventsLog.filter(e => e.team === team && e.action === action).length;
             });
-            content.innerHTML = `<div class="stats-grid"><div class="stats-col"><h5>HAZAI</h5>${hHTML}</div><div class="stats-col"><h5>VENDÉG</h5>${vHTML}</div></div>`;
+            updateStatsUI();
         }
-    }
 
-    function setPossession(newTeam) {
-        const m = state.modules[state.module];
-        if (m.possession === newTeam) return;
-        if (m.possession === 'hazai' && m.statsPPDA.currentSeq.hazai > 0) endSequence('hazai');
-        if (m.possession === 'vendeg' && m.statsPPDA.currentSeq.vendeg > 0) endSequence('vendeg');
-        if ((m.possession === 'hazai' && newTeam === 'vendeg') || (m.possession === 'vendeg' && newTeam === 'hazai')) m.statsPPDA.transitions++;
-        m.possession = newTeam; logEvent(newTeam, "Birtoklás váltás", newTeam); updatePPDA_UI(); saveState();
-    }
+        function updateStatsUI() {
+            const panel = document.getElementById('stats-panel');
+            const content = document.getElementById('stats-content');
+            if (!state.module) { panel.classList.add('hidden'); return; }
+            panel.classList.remove('hidden');
 
-    function addPass(team) {
-        const m = state.modules[state.module];
-        if (!m.timerRunning) return;
-        if (m.possession !== team) setPossession(team);
-        m.statsPPDA.currentSeq[team]++; m.statsPPDA.passes[team]++;
-        logEvent(team, "Sikeres Passz"); updatePPDA_UI(); saveState();
-    }
+            const m = state.modules[state.module];
 
-    function endSequence(team) {
-        const m = state.modules[state.module];
-        let cSeq = m.statsPPDA.currentSeq[team];
-        if (cSeq > 0) {
-            m.statsPPDA.sequences[team].push(cSeq);
-            logEvent(team, "Szekvencia Vége", `${cSeq} passz`);
-            m.statsPPDA.currentSeq[team] = 0;
-        }
-        updatePPDA_UI(); saveState();
-    }
-
-    function calcPPDATimeline() {
-        const m = state.modules[state.module];
-        let res = { hazai: 0, vendeg: 0, kint: 0 };
-        if (m.eventsLog.length === 0) return res;
-        let sorted = [...m.eventsLog].sort((a,b) => a.rawSec - b.rawSec);
-        for (let i = 0; i < sorted.length - 1; i++) {
-            let curr = sorted[i]; let next = sorted[i + 1];
-            if (curr.isH2 === next.isH2) {
-                let diff = next.rawSec - curr.rawSec;
-                if (diff > 0) { let t = (curr.team === "Rendszer" || curr.team === "kint" || curr.action==="Birtoklás váltás" && curr.detail==="kint") ? "kint" : (curr.action==="Birtoklás váltás"?curr.detail:curr.team); res[t] += diff; }
+            if (state.module === 'ppda') {
+                let tl = calcPPDATimeline();
+                const inPlay = tl.hazai + tl.vendeg;
+                const hP = inPlay > 0 ? Math.round((tl.hazai / inPlay) * 100) : 0;
+                const vP = inPlay > 0 ? Math.round((tl.vendeg / inPlay) * 100) : 0;
+                const getPPDA = (opp) => { const oppS = m.statsPPDA.sequences[opp].length; return oppS > 0 ? (m.statsPPDA.passes[opp] / oppS).toFixed(2) : "N/A"; };
+                const getMaxSeq = (team) => m.statsPPDA.sequences[team].length ? Math.max(...m.statsPPDA.sequences[team]) : 0;
+                const getAvgSeq = (team) => {
+                    const seqs = m.statsPPDA.sequences[team];
+                    return seqs.length ? (seqs.reduce((a, b) => a + b, 0) / seqs.length).toFixed(1) : "0.0";
+                };
+                content.innerHTML = `<div class="stats-grid"><div class="stats-col"><h5>HAZAI</h5><div class="stats-row"><span>Birtoklás:</span> <strong>${hP}% (${formatTime(tl.hazai)})</strong></div><div class="stats-row"><span>Passz:</span> <strong>${m.statsPPDA.passes.hazai}</strong></div><div class="stats-row"><span>Átlag szekv.:</span> <strong>${getAvgSeq('hazai')}</strong></div><div class="stats-row"><span>Max szekv.:</span> <strong>${getMaxSeq('hazai')}</strong></div><div class="stats-row"><span>PPDA (V ellen):</span> <strong>${getPPDA('vendeg')}</strong></div></div><div class="stats-col"><h5>VENDÉG</h5><div class="stats-row"><span>Birtoklás:</span> <strong>${vP}% (${formatTime(tl.vendeg)})</strong></div><div class="stats-row"><span>Passz:</span> <strong>${m.statsPPDA.passes.vendeg}</strong></div><div class="stats-row"><span>Átlag szekv.:</span> <strong>${getAvgSeq('vendeg')}</strong></div><div class="stats-row"><span>Max szekv.:</span> <strong>${getMaxSeq('vendeg')}</strong></div><div class="stats-row"><span>PPDA (H ellen):</span> <strong>${getPPDA('hazai')}</strong></div></div></div>`;
+            } else {
+                const tags = state.module === 'fieldtilt' ? defaultFieldTilt : state.customTags;
+                const uniqueNames = [...new Set(tags.map(t => t.name))];
+                let hHTML = ''; let vHTML = '';
+                uniqueNames.forEach(name => {
+                    const hC = m.eventsLog.filter(e => (e.team === 'Hazai' || e.team === 'hazai') && e.action === name).length;
+                    const vC = m.eventsLog.filter(e => (e.team === 'Vendég' || e.team === 'vendeg') && e.action === name).length;
+                    hHTML += `<div class="stats-row"><span>${name}:</span> <strong>${hC}</strong></div>`;
+                    vHTML += `<div class="stats-row"><span>${name}:</span> <strong>${vC}</strong></div>`;
+                });
+                content.innerHTML = `<div class="stats-grid"><div class="stats-col"><h5>HAZAI</h5>${hHTML}</div><div class="stats-col"><h5>VENDÉG</h5>${vHTML}</div></div>`;
             }
         }
-        let last = sorted[sorted.length - 1]; let diffEnd = m.matchSeconds - last.rawSec;
-        if (diffEnd > 0) { let tEnd = (last.team === "Rendszer" || last.team === "kint" || last.action==="Birtoklás váltás" && last.detail==="kint") ? "kint" : (last.action==="Birtoklás váltás"?last.detail:last.team); res[tEnd] += diffEnd; }
-        return res;
-    }
 
-    function updatePPDA_UI() {
-        const m = state.modules[state.module];
-        document.getElementById('seq-home').innerText = m.statsPPDA.currentSeq.hazai;
-        document.getElementById('seq-away').innerText = m.statsPPDA.currentSeq.vendeg;
-        document.querySelectorAll('.pos-box').forEach(b => b.classList.remove('active-possession'));
-        let boxId = m.possession === 'hazai' ? 'box-home' : (m.possession === 'vendeg' ? 'box-away' : 'box-out');
-        document.getElementById(boxId).classList.add('active-possession');
-        let tl = calcPPDATimeline();
-        document.getElementById('time-home').innerText = formatTime(tl.hazai);
-        document.getElementById('time-away').innerText = formatTime(tl.vendeg);
-        document.getElementById('time-out').innerText = formatTime(tl.kint);
-        updateStatsUI(); 
-    }
-
-    function saveState() { localStorage.setItem('pro_tracker_state_hu_v2', JSON.stringify(state)); }
-
-    function fullReset(skipPrompt = false) {
-        if(!skipPrompt && prompt(`Biztosan törlöd a(z) ${state.module.toUpperCase()} modul minden adatát? Kód: ${PIN}`) !== PIN) return;
-        
-        // Csak az aktív modult töröljük a párhuzamosság miatt
-        const isPPDA = state.module === 'ppda';
-        state.modules[state.module] = getDefaultModuleState(isPPDA);
-        
-        document.getElementById('btn-h2').classList.remove('hidden');
-        updateStartBtnUI();
-        updateTimerDisplay(); renderLog(); updateBadges(); 
-        if(state.module === 'ppda') updatePPDA_UI(); 
-        updateStatsUI(); saveState();
-        
-        // Ha semelyik másik modul órája nem fut, lőjük le a fő tickert
-        if (!Object.values(state.modules).some(mod => mod.timerRunning) && timerInterval) {
-            clearInterval(timerInterval);
-            timerInterval = null;
+        function setPossession(newTeam) {
+            const m = state.modules[state.module];
+            if (m.possession === newTeam) return;
+            if (m.possession === 'hazai' && m.statsPPDA.currentSeq.hazai > 0) endSequence('hazai');
+            if (m.possession === 'vendeg' && m.statsPPDA.currentSeq.vendeg > 0) endSequence('vendeg');
+            if ((m.possession === 'hazai' && newTeam === 'vendeg') || (m.possession === 'vendeg' && newTeam === 'hazai')) m.statsPPDA.transitions++;
+            m.possession = newTeam; logEvent(newTeam, "Birtoklás váltás", newTeam); updatePPDA_UI(); saveState();
         }
-		releaseWakeLock();
-    }
 
-    function exportData() {
-        const m = state.modules[state.module];
-		if (m.eventsLog.length === 0) return alert('Nincs rögzített adat ebben a modulban!');
-
-		let mode = prompt("Válaszd ki a letöltési módot:\n1 - Original (Egyszerűsített és Kimutatás)\n2 - Advanced (Részletes, videó szinkronnal)", "1");
-		if (mode !== "1" && mode !== "2") return;
-
-		let csv = "\uFEFF"; 
-
-        // ÚJ: Időrendbe állítjuk az elemeket a CSV kiíratása előtt
-        const sortedLogs = [...m.eventsLog].sort((a, b) => a.rawSec - b.rawSec);
-
-		if (mode === "1") {
-			if (state.module === 'ppda') {
-				csv += "Ido,Csapat,Akcio,Reszlet\n";
-				sortedLogs.forEach(e => {
-					let teamName = e.team === 'hazai' ? 'Hazai' : (e.team === 'vendeg' ? 'Vendég' : e.team);
-					csv += `${e.matchTime},${teamName},${e.action},${e.detail}\n`;
-				});
-
-				let tl = calcPPDATimeline();
-				const inPlay = tl.hazai + tl.vendeg;
-				const hP = inPlay > 0 ? Math.round((tl.hazai / inPlay) * 100) : 0;
-				const vP = inPlay > 0 ? Math.round((tl.vendeg / inPlay) * 100) : 0;
-				
-				const getPPDA = (opp) => { const oppS = m.statsPPDA.sequences[opp].length; return oppS > 0 ? (m.statsPPDA.passes[opp] / oppS).toFixed(2) : "N/A"; };
-				const getMaxSeq = (team) => m.statsPPDA.sequences[team].length ? Math.max(...m.statsPPDA.sequences[team]) : 0;
-				const getAvgSeq = (team) => { const seqs = m.statsPPDA.sequences[team]; return seqs.length ? (seqs.reduce((a, b) => a + b, 0) / seqs.length).toFixed(1) : "0.0"; };
-
-				csv += "\n\n--- MECCS VEGI KIMUTATAS ---\n";
-				csv += "Csapat,Birtoklas %,Birtoklas Ido,Osszes passz,Max szekvencia,Atlag szekvencia,PPDA\n";
-				csv += `Hazai,${hP}%,${formatTime(tl.hazai)},${m.statsPPDA.passes.hazai},${getMaxSeq('hazai')},${getAvgSeq('hazai')},${getPPDA('vendeg')}\n`;
-				csv += `Vendeg,${vP}%,${formatTime(tl.vendeg)},${m.statsPPDA.passes.vendeg},${getMaxSeq('vendeg')},${getAvgSeq('vendeg')},${getPPDA('hazai')}\n`;
-				csv += `\nTiszta jatekido,${formatTime(inPlay)}\n`;
-				csv += `Atmenetek (Transitions) szama,${m.statsPPDA.transitions}\n`;
-			} else {
-				csv += "Ido,Csapat,Esemeny\n";
-				sortedLogs.forEach(e => {
-					let teamName = e.team === 'hazai' ? 'Hazai' : (e.team === 'vendeg' ? 'Vendég' : e.team);
-					csv += `${e.matchTime},${teamName},${e.action}\n`;
-				});
-			}
-		} else {
-			const h1Sync = timeToSeconds(document.getElementById('sync-h1').value, 0);
-			const h2Sync = timeToSeconds(document.getElementById('sync-h2').value, 2700);
-			const videoUrl = document.getElementById('video-url').value.trim();
-			
-			if (videoUrl !== "") csv += `Video URL:,${videoUrl}\n\n`;
-			csv += "Modul,Meccs Ido,Video Ido,Felido,Csapat,Esemeny,Reszlet\n";
-			
-			sortedLogs.forEach(e => {
-				let ft = e.isH2 ? (h2Sync + (e.rawSec - 2700)) : (h1Sync + e.rawSec); 
-				let teamName = e.team === 'hazai' ? 'Hazai' : (e.team === 'vendeg' ? 'Vendég' : e.team);
-				csv += `${state.module},${e.matchTime},${formatTime(ft)},${e.isH2?'H2':'H1'},${teamName},${e.action},${e.detail}\n`;
-			});
-		}
-
-		const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-		const link = document.createElement("a");
-		link.href = URL.createObjectURL(blob);
-		link.download = `meccs_export_${state.module}_${mode === "1" ? "original" : "advanced"}_${new Date().getTime()}.csv`;
-		link.click();
-	}
-
-    document.addEventListener('keydown', (e) => {
-        if(document.activeElement.tagName === 'INPUT' || !state.module) return; 
-        const m = state.modules[state.module];
-        const k = e.key.toUpperCase();
-        
-        if (e.key === ' ') { e.preventDefault(); toggleTimer(); return; }
-		if (k === 'Z' && m.eventsLog.length > 0) { undoLastEvent(); return; }        
-        if(state.mode === 'post') {
-            if (e.key === 'ArrowRight') seekTime(5); if (e.key === 'ArrowLeft') seekTime(-5);
+        function addPass(team) {
+            const m = state.modules[state.module];
+            if (!m.timerRunning) return;
+            if (m.possession !== team) setPossession(team);
+            m.statsPPDA.currentSeq[team]++; m.statsPPDA.passes[team]++;
+            logEvent(team, "Sikeres Passz"); updatePPDA_UI(); saveState();
         }
-        
-        if(state.module === 'ppda') {
-            if (k === '1') setPossession('hazai'); if (k === '2') setPossession('kint'); if (k === '3') setPossession('vendeg');
-            if (k === 'Q') addPass('hazai'); if (k === 'E') addPass('vendeg');
-            if (k === 'A') endSequence('hazai'); if (k === 'D') endSequence('vendeg');
-        } else if (state.module === 'fieldtilt') {
-            const hit = defaultFieldTilt.find(t => t.hotkey === k); if(hit) logStandardEvent(hit.team, hit.name);
-        } else if (state.module === 'custom') {
-            const hit = state.customTags.find(t => t.hotkey === k); if(hit) logStandardEvent(hit.team, hit.name);
+
+        function endSequence(team) {
+            const m = state.modules[state.module];
+            let cSeq = m.statsPPDA.currentSeq[team];
+            if (cSeq > 0) {
+                m.statsPPDA.sequences[team].push(cSeq);
+                logEvent(team, "Szekvencia Vége", `${cSeq} passz`);
+                m.statsPPDA.currentSeq[team] = 0;
+            }
+            updatePPDA_UI(); saveState();
         }
-    });
-</script>
+
+        function calcPPDATimeline() {
+            const m = state.modules[state.module];
+            let res = { hazai: 0, vendeg: 0, kint: 0 };
+            if (m.eventsLog.length === 0) return res;
+            let sorted = [...m.eventsLog].sort((a, b) => a.rawSec - b.rawSec);
+            for (let i = 0; i < sorted.length - 1; i++) {
+                let curr = sorted[i]; let next = sorted[i + 1];
+                if (curr.isH2 === next.isH2) {
+                    let diff = next.rawSec - curr.rawSec;
+                    if (diff > 0) { let t = (curr.team === "Rendszer" || curr.team === "kint" || curr.action === "Birtoklás váltás" && curr.detail === "kint") ? "kint" : (curr.action === "Birtoklás váltás" ? curr.detail : curr.team); res[t] += diff; }
+                }
+            }
+            let last = sorted[sorted.length - 1]; let diffEnd = m.matchSeconds - last.rawSec;
+            if (diffEnd > 0) { let tEnd = (last.team === "Rendszer" || last.team === "kint" || last.action === "Birtoklás váltás" && last.detail === "kint") ? "kint" : (last.action === "Birtoklás váltás" ? last.detail : last.team); res[tEnd] += diffEnd; }
+            return res;
+        }
+
+        function updatePPDA_UI() {
+            const m = state.modules[state.module];
+            document.getElementById('seq-home').innerText = m.statsPPDA.currentSeq.hazai;
+            document.getElementById('seq-away').innerText = m.statsPPDA.currentSeq.vendeg;
+            document.querySelectorAll('.pos-box').forEach(b => b.classList.remove('active-possession'));
+            let boxId = m.possession === 'hazai' ? 'box-home' : (m.possession === 'vendeg' ? 'box-away' : 'box-out');
+            document.getElementById(boxId).classList.add('active-possession');
+            let tl = calcPPDATimeline();
+            document.getElementById('time-home').innerText = formatTime(tl.hazai);
+            document.getElementById('time-away').innerText = formatTime(tl.vendeg);
+            document.getElementById('time-out').innerText = formatTime(tl.kint);
+            updateStatsUI();
+        }
+
+        function saveState() { localStorage.setItem('pro_tracker_state_hu_v2', JSON.stringify(state)); }
+
+        function fullReset(skipPrompt = false) {
+            if (!skipPrompt && prompt(`Biztosan törlöd a(z) ${state.module.toUpperCase()} modul minden adatát? Kód: ${PIN}`) !== PIN) return;
+
+            // Csak az aktív modult töröljük a párhuzamosság miatt
+            const isPPDA = state.module === 'ppda';
+            state.modules[state.module] = getDefaultModuleState(isPPDA);
+
+            document.getElementById('btn-h2').classList.remove('hidden');
+            updateStartBtnUI();
+            updateTimerDisplay(); renderLog(); updateBadges();
+            if (state.module === 'ppda') updatePPDA_UI();
+            updateStatsUI(); saveState();
+
+            // Ha semelyik másik modul órája nem fut, lőjük le a fő tickert
+            if (!Object.values(state.modules).some(mod => mod.timerRunning) && timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+            releaseWakeLock();
+        }
+
+        function exportData() {
+            const m = state.modules[state.module];
+            if (m.eventsLog.length === 0) return alert('Nincs rögzített adat ebben a modulban!');
+
+            let mode = prompt("Válaszd ki a letöltési módot:\n1 - Original (Egyszerűsített és Kimutatás)\n2 - Advanced (Részletes, videó szinkronnal)", "1");
+            if (mode !== "1" && mode !== "2") return;
+
+            // Fájlnévhez szükséges adatok bekérése
+            let homeTeamRaw = prompt("Hazai csapat neve:", "Hazai") || "hazai";
+            let awayTeamRaw = prompt("Vendég csapat neve:", "Vendeg") || "vendeg";
+            let ageGroupRaw = prompt("Korosztály (pl. U19):", "U19") || "senior";
+
+            // Szövegtisztító függvény (ékezetek, szóközök és speciális karakterek cseréje alulvonásra)
+            const sanitize = (str) => {
+                return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+                    .replace(/[^a-zA-Z0-9]/g, '_')
+                    .replace(/_+/g, '_')
+                    .replace(/^_|_$/g, '')
+                    .toLowerCase();
+            };
+
+            const homeTeam = sanitize(homeTeamRaw);
+            const awayTeam = sanitize(awayTeamRaw);
+            const ageGroup = sanitize(ageGroupRaw);
+
+            // Dátum generálása (YYYYMMDD)
+            const today = new Date();
+            const dateStr = today.getFullYear() + String(today.getMonth() + 1).padStart(2, '0') + String(today.getDate()).padStart(2, '0');
+
+            // Formátum jelölő (o vagy a)
+            const formatInd = mode === "1" ? "o" : "a";
+
+            // Fájlnév összerakása
+            const fileName = `${homeTeam}_vs_${awayTeam}_${ageGroup}_${dateStr}_${state.module}_${formatInd}.csv`;
+
+            let csv = "\uFEFF";
+
+            // Időrendbe állítjuk az elemeket a CSV kiíratása előtt
+            const sortedLogs = [...m.eventsLog].sort((a, b) => a.rawSec - b.rawSec);
+
+            if (mode === "1") {
+                if (state.module === 'ppda') {
+                    csv += "Ido,Csapat,Akcio,Reszlet\n";
+                    sortedLogs.forEach(e => {
+                        // Original mód: Marad a "Hazai" és "Vendég" szó
+                        let teamName = e.team === 'hazai' ? 'Hazai' : (e.team === 'vendeg' ? 'Vendég' : e.team);
+                        csv += `${e.matchTime},${teamName},${e.action},${e.detail}\n`;
+                    });
+
+                    let tl = calcPPDATimeline();
+                    const inPlay = tl.hazai + tl.vendeg;
+                    const hP = inPlay > 0 ? Math.round((tl.hazai / inPlay) * 100) : 0;
+                    const vP = inPlay > 0 ? Math.round((tl.vendeg / inPlay) * 100) : 0;
+
+                    const getPPDA = (opp) => { const oppS = m.statsPPDA.sequences[opp].length; return oppS > 0 ? (m.statsPPDA.passes[opp] / oppS).toFixed(2) : "N/A"; };
+                    const getMaxSeq = (team) => m.statsPPDA.sequences[team].length ? Math.max(...m.statsPPDA.sequences[team]) : 0;
+                    const getAvgSeq = (team) => { const seqs = m.statsPPDA.sequences[team]; return seqs.length ? (seqs.reduce((a, b) => a + b, 0) / seqs.length).toFixed(1) : "0.0"; };
+
+                    csv += "\n\n--- MECCS VEGI KIMUTATAS ---\n";
+                    csv += "Csapat,Birtoklas %,Birtoklas Ido,Osszes passz,Max szekvencia,Atlag szekvencia,PPDA\n";
+                    // Original mód: Itt is marad a statikus Hazai/Vendég
+                    csv += `Hazai,${hP}%,${formatTime(tl.hazai)},${m.statsPPDA.passes.hazai},${getMaxSeq('hazai')},${getAvgSeq('hazai')},${getPPDA('vendeg')}\n`;
+                    csv += `Vendég,${vP}%,${formatTime(tl.vendeg)},${m.statsPPDA.passes.vendeg},${getMaxSeq('vendeg')},${getAvgSeq('vendeg')},${getPPDA('hazai')}\n`;
+                    csv += `\nTiszta jatekido,${formatTime(inPlay)}\n`;
+                    csv += `Atmenetek (Transitions) szama,${m.statsPPDA.transitions}\n`;
+                } else {
+                    csv += "Ido,Csapat,Esemeny\n";
+                    sortedLogs.forEach(e => {
+                        // Original mód: Marad a "Hazai" és "Vendég" szó
+                        let teamName = e.team === 'hazai' ? 'Hazai' : (e.team === 'vendeg' ? 'Vendég' : e.team);
+                        csv += `${e.matchTime},${teamName},${e.action}\n`;
+                    });
+                }
+            } else {
+                const h1Sync = timeToSeconds(document.getElementById('sync-h1').value, 0);
+                const h2Sync = timeToSeconds(document.getElementById('sync-h2').value, 2700);
+                const videoUrl = document.getElementById('video-url').value.trim();
+
+                if (videoUrl !== "") csv += `Video URL:,${videoUrl}\n\n`;
+                csv += "Modul,Meccs Ido,Video Ido,Felido,Csapat,Esemeny,Reszlet\n";
+
+                sortedLogs.forEach(e => {
+                    let ft = e.isH2 ? (h2Sync + (e.rawSec - 2700)) : (h1Sync + e.rawSec);
+                    // Advanced mód: Használjuk a bekéréskor megadott egyedi csapatneveket
+                    let teamName = e.team === 'hazai' ? homeTeamRaw : (e.team === 'vendeg' ? awayTeamRaw : e.team);
+                    csv += `${state.module},${e.matchTime},${formatTime(ft)},${e.isH2 ? 'H2' : 'H1'},${teamName},${e.action},${e.detail}\n`;
+                });
+            }
+
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = fileName;
+            link.click();
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (document.activeElement.tagName === 'INPUT' || !state.module) return;
+            const m = state.modules[state.module];
+            const k = e.key.toUpperCase();
+
+            if (e.key === ' ') { e.preventDefault(); toggleTimer(); return; }
+            if (k === 'Z' && m.eventsLog.length > 0) { undoLastEvent(); return; }
+            if (state.mode === 'post') {
+                if (e.key === 'ArrowRight') seekTime(5); if (e.key === 'ArrowLeft') seekTime(-5);
+            }
+
+            if (state.module === 'ppda') {
+                if (k === '1') setPossession('hazai'); if (k === '2') setPossession('kint'); if (k === '3') setPossession('vendeg');
+                if (k === 'Q') addPass('hazai'); if (k === 'E') addPass('vendeg');
+                if (k === 'A') endSequence('hazai'); if (k === 'D') endSequence('vendeg');
+            } else if (state.module === 'fieldtilt') {
+                const hit = defaultFieldTilt.find(t => t.hotkey === k); if (hit) logStandardEvent(hit.team, hit.name);
+            } else if (state.module === 'custom') {
+                const hit = state.customTags.find(t => t.hotkey === k); if (hit) logStandardEvent(hit.team, hit.name);
+            }
+        });
+    </script>
 </body>
 </html>
