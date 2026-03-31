@@ -420,7 +420,6 @@
                 background-color: #e0e0e0;
             }
 
-        /* Felülírjuk az inline HTML színeket, hogy belesimuljanak az új sötét dizájnba */
         button[style*="background: var(--danger)"] {
             background-color: var(--danger) !important;
             color: white !important;
@@ -458,10 +457,16 @@
     </div>
 
     <div id="view-tracker" class="view-container hidden">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
             <button class="btn-ctrl" style="background: var(--gray); padding: 5px 10px;" onclick="backToMenu()">🔙 Menü</button>
-            <h3 id="module-title" style="margin: 0; color: #888;">MODUL</h3>
-            <button class="btn-ctrl" style="background: var(--danger); padding: 5px 10px;" onclick="fullReset()">RESET</button>
+            <h3 id="module-title" style="margin: 0; color: #888; flex-grow: 1; text-align: center;">MODUL</h3>
+            <div style="display: flex; gap: 5px;">
+                <button class="btn-ctrl" style="background: var(--gray); padding: 5px 10px;" onclick="saveModuleProject()">💾 Mentés</button>
+                <button class="btn-ctrl" style="background: var(--gray); padding: 5px 10px;" onclick="document.getElementById('module-upload').click()">📂 Betöltés</button>
+                <input type="file" id="module-upload" class="hidden" accept=".json" onchange="loadModuleProject(event)">
+                <button class="btn-ctrl" style="background: var(--danger); padding: 5px 10px;" onclick="fullReset()">RESET</button>
+            </div>
         </div>
 
         <div class="radio-group">
@@ -556,10 +561,10 @@
                 liveStartTimeRef: 0,
                 timerRunning: false,
                 possession: 'kint',
-                syncH1: "00:00",      // Párhuzamos szinkron érték
-                syncH2: "45:00",      // Párhuzamos szinkron érték
-                videoUrl: "",         // Párhuzamos szinkron érték
-                playbackSpeed: "1",   // Párhuzamos szinkron érték
+                syncH1: "00:00",
+                syncH2: "45:00",
+                videoUrl: "",
+                playbackSpeed: "1",
                 statsPPDA: isPPDA ? { passes: { hazai: 0, vendeg: 0 }, currentSeq: { hazai: 0, vendeg: 0 }, sequences: { hazai: [], vendeg: [] }, transitions: 0 } : null
             };
         }
@@ -578,38 +583,27 @@
         let timerInterval = null;
         let wakeLock = null;
 
-        // Képernyő ébrentartásának kérése
         async function requestWakeLock() {
             if ('wakeLock' in navigator) {
                 try {
                     wakeLock = await navigator.wakeLock.request('screen');
-                    console.log('Képernyő ébrentartása (Wake Lock) AKTÍV');
-                } catch (err) {
-                    console.error(`Wake Lock hiba: ${err.message}`);
-                }
+                } catch (err) { }
             }
         }
 
-        // Képernyő ébrentartásának feloldása
         function releaseWakeLock() {
             if (wakeLock !== null) {
-                wakeLock.release().then(() => {
-                    wakeLock = null;
-                    console.log('Képernyő ébrentartása FELOLDVA');
-                });
+                wakeLock.release().then(() => { wakeLock = null; });
             }
         }
 
-        // Ha a böngészőt háttérbe teszed (pl. hívás jön), a rendszer eldobja a Wake Lock-ot.
-        // Ez a kód gondoskodik róla, hogy visszatéréskor újra aktiválódjon, ha fut az óra:
         document.addEventListener('visibilitychange', () => {
             if (document.visibilityState === 'visible') {
                 const anyRunning = Object.values(state.modules).some(mod => mod.timerRunning);
-                if (anyRunning) {
-                    requestWakeLock();
-                }
+                if (anyRunning) requestWakeLock();
             }
         });
+
         let playbackSpeed = 1;
 
         const defaultFieldTilt = [
@@ -633,7 +627,6 @@
 
         function backToMenu() {
             switchView('view-menu');
-            // Visszalépéskor a háttérben futó órákat NEM állítjuk meg
         }
 
         function initModule(mod) {
@@ -667,7 +660,6 @@
             let moduleTitle = mod === 'fieldtilt' ? "MECCS ESEMÉNYEK" : (mod === 'ppda' ? "PPDA & BIRTOKLÁS" : "EGYEDI");
             document.getElementById('module-title').innerText = moduleTitle;
 
-            // Betöltjük a UI mezőkbe az aktuális modul saját beállításait
             document.getElementById('sync-h1').value = m.syncH1 || "00:00";
             document.getElementById('sync-h2').value = m.syncH2 || "45:00";
             document.getElementById('video-url').value = m.videoUrl || "";
@@ -747,13 +739,11 @@
             reader.readAsText(file);
         }
 
+        // ÚJ: Hibatűrő parser az idő beviteléhez
         function timeToSeconds(timeStr, defaultValue = 0) {
             if (!timeStr) return defaultValue;
-            // Szétvágjuk a szöveget bármilyen nem-számjegy karakter (pl. _, ., -, szóköz, :) mentén
             const parts = timeStr.trim().split(/[^0-9]+/);
             if (parts.length === 0 || parts[0] === "") return defaultValue;
-
-            // Ha csak egy számot ír be (pl. "2"), azt is percnek veszi. 
             const m = parseInt(parts[0]) || 0;
             const s = parts.length > 1 ? (parseInt(parts[1]) || 0) : 0;
             return (m * 60) + s;
@@ -764,16 +754,105 @@
             return `${m.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
         }
 
+        // ÚJ: Folyamatos időformátum PowerBI miatt
         function getMatchTimeLabel(sec, isH2) {
-            if (!isH2) return sec <= 2700 ? formatTime(sec) : `45:00 +${sec - 2700}mp`;
-            else return sec <= 5400 ? formatTime(sec) : `90:00 +${sec - 5400}mp`;
+            return formatTime(sec);
+        }
+
+        // ÚJ: Modul szintű projekt mentés
+        function saveModuleProject() {
+            if (!state.module) return;
+            const exportData = {
+                moduleName: state.module,
+                mode: state.mode,
+                moduleData: state.modules[state.module],
+                customTags: state.module === 'custom' ? state.customTags : []
+            };
+            const blob = new Blob([JSON.stringify(exportData)], { type: 'application/json' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+
+            const today = new Date();
+            const dateStr = today.getFullYear() + String(today.getMonth() + 1).padStart(2, '0') + String(today.getDate()).padStart(2, '0');
+
+            a.download = `tracker_projekt_${state.module}_${dateStr}.json`;
+            a.click();
+        }
+
+        // ÚJ: Modul szintű projekt betöltés (Automatikusan Utólagos módban)
+        function loadModuleProject(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function (event) {
+                try {
+                    const parsed = JSON.parse(event.target.result);
+
+                    if (!parsed.moduleName || !parsed.moduleData) throw new Error("Érvénytelen fájl");
+
+                    if (parsed.moduleName !== state.module) {
+                        alert(`Hiba: Ez a fájl a(z) ${parsed.moduleName.toUpperCase()} modulhoz készült, de te most a(z) ${state.module.toUpperCase()} modulban vagy!`);
+                        document.getElementById('module-upload').value = '';
+                        return;
+                    }
+
+                    if (confirm(`Biztosan betöltöd a(z) ${state.module.toUpperCase()} modul korábbi mentését? Ez felülírja a jelenlegi adataidat ebben a modulban!`)) {
+                        state.modules[state.module] = parsed.moduleData;
+
+                        // KÉRÉSRE: Ha fájlból töltünk be projektet, az automatikusan UTÓLAGOS (post) módban nyílik meg
+                        state.mode = 'post';
+                        // Az órát megállítjuk, hogy nyugodtan be lehessen állítani a videót
+                        state.modules[state.module].timerRunning = false;
+
+                        if (state.module === 'custom' && parsed.customTags && parsed.customTags.length > 0) {
+                            state.customTags = parsed.customTags;
+                            buildEventGrid('container-custom', state.customTags);
+                        }
+
+                        // Rádiógomb és UI átállítása Utólagosra
+                        document.getElementById('mode-post').checked = true;
+                        document.getElementById('sync-h1').value = parsed.moduleData.syncH1 || "00:00";
+                        document.getElementById('sync-h2').value = parsed.moduleData.syncH2 || "45:00";
+                        document.getElementById('video-url').value = parsed.moduleData.videoUrl || "";
+                        document.getElementById('speedSelect').value = parsed.moduleData.playbackSpeed || "1";
+                        updateSpeed(true);
+
+                        document.getElementById('btn-h2').classList.toggle('hidden', parsed.moduleData.isH2);
+
+                        // Videó szinkronizáló és tekerő panelek megjelenítése
+                        document.getElementById('seek-container').classList.remove('hidden');
+                        document.getElementById('sync-container').classList.remove('hidden');
+
+                        updateStartBtnUI();
+                        updateTimerDisplay();
+                        renderLog();
+                        updateBadges();
+                        if (state.module === 'ppda') updatePPDA_UI();
+                        updateStatsUI();
+
+                        // Óra teljes leállítása a háttérben, ha egyetlen modul sem fut már
+                        if (!Object.values(state.modules).some(mod => mod.timerRunning)) {
+                            if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+                            if (typeof releaseWakeLock === 'function') releaseWakeLock();
+                        }
+
+                        saveState();
+                        alert("Modul adatai sikeresen betöltve! A kódolás Utólagos módban folytatható.");
+                    }
+                }
+                catch (err) {
+                    alert("Hibás vagy érvénytelen projekt fájl!");
+                }
+                // Input mező nullázása
+                document.getElementById('module-upload').value = '';
+            };
+            reader.readAsText(file);
         }
 
         function handleModeChange(isRestoring = false) {
             const isPost = document.getElementById('mode-post').checked;
             const newMode = isPost ? 'post' : 'live';
 
-            // Ha még nincs kiválasztva modul (pl. betöltéskor), csak átállítjuk a módot
             if (!state.module) {
                 state.mode = newMode;
                 return;
@@ -783,19 +862,16 @@
             let hasData = m.eventsLog.length > 0 || m.matchSeconds > 0;
 
             if (!isRestoring && hasData && newMode !== state.mode) {
-                // Egyetlen prompt a megerősítésre és kódra, mint a Modul Resetnél
                 if (prompt(`Biztosan módot váltasz? Ez törli a(z) ${state.module.toUpperCase()} modul minden adatát! Kód: ${PIN}`) === PIN) {
                     const isPPDA = state.module === 'ppda';
                     state.modules[state.module] = getDefaultModuleState(isPPDA);
 
-                    // Reseteljük a UI szinkronizációs mezőit is
                     document.getElementById('sync-h1').value = "00:00";
                     document.getElementById('sync-h2').value = "45:00";
                     document.getElementById('video-url').value = "";
                     document.getElementById('speedSelect').value = "1";
                     updateSpeed(true);
 
-                    // UI elemek vizuális nullázása a képernyőn
                     document.getElementById('btn-h2').classList.remove('hidden');
                     updateTimerDisplay();
                     renderLog();
@@ -803,13 +879,11 @@
                     if (state.module === 'ppda') updatePPDA_UI();
                     updateStatsUI();
 
-                    // Ha ezzel az utolsó futó órát is kilőttük, álljon le a fő ticker és a Wake Lock
                     if (!Object.values(state.modules).some(mod => mod.timerRunning)) {
                         if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
                         if (typeof releaseWakeLock === 'function') releaseWakeLock();
                     }
                 } else {
-                    // Hibás kód vagy Mégsem esetén visszadobjuk a rádiógombot
                     document.getElementById(`mode-${state.mode}`).checked = true;
                     return;
                 }
@@ -857,8 +931,6 @@
             if (!anyRunning) {
                 clearInterval(timerInterval);
                 timerInterval = null;
-
-                // FELOLDJUK A KÉPERNYŐ ÉBRENTARTÁSÁT
                 releaseWakeLock();
             }
             saveState();
@@ -868,9 +940,9 @@
             if (confirm("Biztosan befejezed a kódolást? Az óra leáll és indul az exportálás.")) {
                 const m = state.modules[state.module];
                 if (m.timerRunning) {
-                    stopTimer(); // Leállítja az órát az aktuális modulban
+                    stopTimer();
                 }
-                exportData(); // Meghívja az exportálást
+                exportData();
             }
         }
 
@@ -888,7 +960,6 @@
             }
         }
 
-        // Fő óra intervallum (Párhuzamos módhoz)
         function globalTick() {
             let anyRunning = false;
             Object.values(state.modules).forEach(m => {
@@ -950,7 +1021,6 @@
         function updateSpeed(fromInit = false) {
             playbackSpeed = parseFloat(document.getElementById('speedSelect').value);
 
-            // Ha nem a betöltés hívta meg, mentjük az adatot a modul memóriájába
             if (!fromInit && state.module) {
                 state.modules[state.module].playbackSpeed = document.getElementById('speedSelect').value;
                 saveState();
@@ -964,7 +1034,6 @@
 
         function saveSync() {
             if (!state.module) return;
-            // A mezők tartalmát már csak az aktív modul belső állapotába mentjük
             const m = state.modules[state.module];
             m.syncH1 = document.getElementById('sync-h1').value;
             m.syncH2 = document.getElementById('sync-h2').value;
@@ -995,16 +1064,14 @@
             const list = document.getElementById('log-list'); list.innerHTML = '';
             m.eventsLog.slice(-4).reverse().forEach(e => {
                 let teamName = e.team === 'hazai' ? 'Hazai' : (e.team === 'vendeg' ? 'Vendég' : e.team);
-                // Kivezetve a törlés gomb, csak a listaelem marad
                 list.innerHTML += `<li><span><b>[${e.matchTime}]</b> ${teamName} - ${e.action} ${e.detail}</span></li>`;
             });
         }
 
         function undoLastEvent() {
             const m = state.modules[state.module];
-            if (m.eventsLog.length === 0) return; // Nincs mit visszavonni
+            if (m.eventsLog.length === 0) return;
 
-            // Mindig az utolsó elemet nézzük
             const ev = m.eventsLog[m.eventsLog.length - 1];
 
             if (ev.action === "Második félidő") {
@@ -1024,12 +1091,10 @@
                 if (ev.action === "Sikeres Passz") { m.statsPPDA.passes[ev.team]--; m.statsPPDA.currentSeq[ev.team]--; }
                 else if (ev.action === "Szekvencia Vége") { m.statsPPDA.currentSeq[ev.team] = m.statsPPDA.sequences[ev.team].pop(); }
                 else if (ev.action === "Birtoklás váltás") {
-                    // Megkeresi az előző (utolsó előtti) birtoklás váltást
                     m.possession = m.eventsLog.slice(0, -1).reverse().find(e => e.action === "Birtoklás váltás")?.detail || 'kint';
                 }
             }
 
-            // Töröljük a legutolsó eseményt a tömb végéről
             m.eventsLog.pop();
 
             renderLog(); updateBadges(); if (state.module === 'ppda') updatePPDA_UI(); updateTimerDisplay(); saveState();
@@ -1143,11 +1208,9 @@
         function fullReset(skipPrompt = false) {
             if (!skipPrompt && prompt(`Biztosan törlöd a(z) ${state.module.toUpperCase()} modul minden adatát? Kód: ${PIN}`) !== PIN) return;
 
-            // Csak az aktív modult töröljük a párhuzamosság miatt
             const isPPDA = state.module === 'ppda';
             state.modules[state.module] = getDefaultModuleState(isPPDA);
 
-            // Reseteljük a UI szinkronizációs mezőit is
             document.getElementById('sync-h1').value = "00:00";
             document.getElementById('sync-h2').value = "45:00";
             document.getElementById('video-url').value = "";
@@ -1160,7 +1223,6 @@
             if (state.module === 'ppda') updatePPDA_UI();
             updateStatsUI(); saveState();
 
-            // Ha semelyik másik modul órája nem fut, lőjük le a fő tickert
             if (!Object.values(state.modules).some(mod => mod.timerRunning) && timerInterval) {
                 clearInterval(timerInterval);
                 timerInterval = null;
@@ -1175,12 +1237,10 @@
             let mode = prompt("Válaszd ki a letöltési módot:\n1 - Original (Egyszerűsített és Kimutatás)\n2 - Advanced (Részletes, videó szinkronnal)", "1");
             if (mode !== "1" && mode !== "2") return;
 
-            // Fájlnévhez szükséges adatok bekérése
             let homeTeamRaw = prompt("Hazai csapat neve:", "Hazai") || "hazai";
             let awayTeamRaw = prompt("Vendég csapat neve:", "Vendeg") || "vendeg";
             let ageGroupRaw = prompt("Korosztály (pl. U19):", "U19") || "senior";
 
-            // Szövegtisztító függvény (ékezetek, szóközök és speciális karakterek cseréje alulvonásra)
             const sanitize = (str) => {
                 return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
                     .replace(/[^a-zA-Z0-9]/g, '_')
@@ -1193,26 +1253,21 @@
             const awayTeam = sanitize(awayTeamRaw);
             const ageGroup = sanitize(ageGroupRaw);
 
-            // Dátum generálása (YYYYMMDD)
             const today = new Date();
             const dateStr = today.getFullYear() + String(today.getMonth() + 1).padStart(2, '0') + String(today.getDate()).padStart(2, '0');
 
-            // Formátum jelölő (o vagy a)
             const formatInd = mode === "1" ? "o" : "a";
 
-            // Fájlnév összerakása
             const fileName = `${homeTeam}_vs_${awayTeam}_${ageGroup}_${dateStr}_${state.module}_${formatInd}.csv`;
 
             let csv = "\uFEFF";
 
-            // Időrendbe állítjuk az elemeket a CSV kiíratása előtt
             const sortedLogs = [...m.eventsLog].sort((a, b) => a.rawSec - b.rawSec);
 
             if (mode === "1") {
                 if (state.module === 'ppda') {
                     csv += "Ido,Csapat,Akcio,Reszlet\n";
                     sortedLogs.forEach(e => {
-                        // Original mód: Marad a "Hazai" és "Vendég" szó
                         let teamName = e.team === 'hazai' ? 'Hazai' : (e.team === 'vendeg' ? 'Vendég' : e.team);
                         csv += `${e.matchTime},${teamName},${e.action},${e.detail}\n`;
                     });
@@ -1228,7 +1283,6 @@
 
                     csv += "\n\n--- MECCS VEGI KIMUTATAS ---\n";
                     csv += "Csapat,Birtoklas %,Birtoklas Ido,Osszes passz,Max szekvencia,Atlag szekvencia,PPDA\n";
-                    // Original mód: Itt is marad a statikus Hazai/Vendég
                     csv += `Hazai,${hP}%,${formatTime(tl.hazai)},${m.statsPPDA.passes.hazai},${getMaxSeq('hazai')},${getAvgSeq('hazai')},${getPPDA('vendeg')}\n`;
                     csv += `Vendég,${vP}%,${formatTime(tl.vendeg)},${m.statsPPDA.passes.vendeg},${getMaxSeq('vendeg')},${getAvgSeq('vendeg')},${getPPDA('hazai')}\n`;
                     csv += `\nTiszta jatekido,${formatTime(inPlay)}\n`;
@@ -1236,20 +1290,18 @@
                 } else {
                     csv += "Ido,Csapat,Esemeny\n";
                     sortedLogs.forEach(e => {
-                        // Original mód: Marad a "Hazai" és "Vendég" szó
                         let teamName = e.team === 'hazai' ? 'Hazai' : (e.team === 'vendeg' ? 'Vendég' : e.team);
                         csv += `${e.matchTime},${teamName},${e.action}\n`;
                     });
                 }
             } else {
-                // ÚJ: A modul állapotából olvassuk ki a szinkron mezőket
                 const h1Str = m.syncH1 || "00:00";
                 const h2Str = m.syncH2 || "45:00";
                 const h1Sync = timeToSeconds(h1Str, 0);
                 const h2Sync = timeToSeconds(h2Str, 2700);
                 const videoUrl = m.videoUrl || "";
 
-                // ÚJ: Kimentjük a szinkron idők szöveges értékét is a CSV elejére
+                // ÚJ: Szinkron adatok kiírása az Advanced mód elején
                 if (videoUrl !== "") csv += `Video URL:,${videoUrl}\n`;
                 csv += `1. Felido Video Start:,${h1Str}\n`;
                 csv += `2. Felido Video Start:,${h2Str}\n\n`;
@@ -1258,7 +1310,6 @@
 
                 sortedLogs.forEach(e => {
                     let ft = e.isH2 ? (h2Sync + (e.rawSec - 2700)) : (h1Sync + e.rawSec);
-                    // Advanced mód: Használjuk a bekéréskor megadott egyedi csapatneveket
                     let teamName = e.team === 'hazai' ? homeTeamRaw : (e.team === 'vendeg' ? awayTeamRaw : e.team);
                     csv += `${state.module},${e.matchTime},${formatTime(ft)},${e.isH2 ? 'H2' : 'H1'},${teamName},${e.action},${e.detail}\n`;
                 });
