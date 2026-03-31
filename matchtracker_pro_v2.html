@@ -184,8 +184,8 @@
             }
 
         #mode-live:checked + label {
-            background: var(--primary);
-            color: white;
+            background: var(--text);
+            color: black;
         }
 
         #mode-post:checked + label {
@@ -462,10 +462,10 @@
             <button class="btn-ctrl" style="background: var(--gray); padding: 5px 10px;" onclick="backToMenu()">🔙 Menü</button>
             <h3 id="module-title" style="margin: 0; color: #888; flex-grow: 1; text-align: center;">MODUL</h3>
             <div style="display: flex; gap: 5px;">
-                <button class="btn-ctrl" style="background: var(--gray); padding: 5px 10px;" onclick="saveModuleProject()">💾 Mentés</button>
+                <button class="btn-ctrl" style="background: var(--gray); padding: 5px 10px;" onclick="saveModuleProject()">💾 Projekt mentés</button>
                 <button class="btn-ctrl" style="background: var(--gray); padding: 5px 10px;" onclick="document.getElementById('module-upload').click()">📂 Betöltés</button>
                 <input type="file" id="module-upload" class="hidden" accept=".json" onchange="loadModuleProject(event)">
-                <button class="btn-ctrl" style="background: var(--danger); padding: 5px 10px;" onclick="fullReset()">RESET</button>
+                <button class="btn-ctrl" style="background: #ff0000;color: #ffffff; padding: 5px 10px;" onclick="fullReset()">RESET</button>
             </div>
         </div>
 
@@ -505,8 +505,8 @@
 
         <div class="timer-controls">
             <button id="btn-start" class="btn-ctrl" style="background: var(--success); width: 160px;" onclick="toggleTimer()">START</button>
-            <button id="btn-h2" class="btn-ctrl" style="background: var(--danger);" onclick="startSecondHalf()">MÁSODIK FÉLIDŐ START (45:00)</button>
-            <button id="btn-end" class="btn-ctrl" style="background: var(--danger);" onclick="endMatch()">MECCS VÉGE</button>
+            <button id="btn-h2" class="btn-ctrl" style="background: var(--text);color: #000000;" onclick="startSecondHalf()">MÁSODIK FÉLIDŐ START (45:00)</button>
+            <button id="btn-end" class="btn-ctrl" style="background: var(--text); color: #000000" onclick="endMatch()">MECCS VÉGE</button>
         </div>
 
         <div id="container-fieldtilt" class="grid-2 hidden"></div>
@@ -535,7 +535,7 @@
         <div class="monitor-panel">
             <h4 style="margin: 0 0 10px 0; border-bottom: 1px solid #444; padding-bottom: 5px; display: flex; justify-content: space-between; align-items: center;">
                 <span>Legutóbbi események</span>
-                <button class="btn-ctrl" style="background: var(--danger); padding: 5px 10px; font-size: 0.85em;" onclick="undoLastEvent()">↩ VISSZAVONÁS (Z)</button>
+                <button class="btn-ctrl" style="background: var(--text); color: black; padding: 5px 10px; font-size: 0.85em;" onclick="undoLastEvent()">↩ VISSZAVONÁS (Z)</button>
             </h4>
             <ul id="log-list"></ul>
         </div>
@@ -757,6 +757,24 @@
         // ÚJ: Folyamatos időformátum PowerBI miatt
         function getMatchTimeLabel(sec, isH2) {
             return formatTime(sec);
+        }
+
+        // ÚJ: Segédfüggvény a videó idő (Footage Time) kiszámításához
+        function getFootageSeconds(m) {
+            const h1Sync = timeToSeconds(m.syncH1 || "00:00", 0);
+            const h2Sync = timeToSeconds(m.syncH2 || "45:00", 2700);
+            return m.isH2 ? (h2Sync + (m.matchSeconds - 2700)) : (h1Sync + m.matchSeconds);
+        }
+
+        // ÚJ: Segédfüggvény a videó időből meccs idő visszaszámításához
+        function getMatchSecondsFromFootage(footageSec, m) {
+            const h1Sync = timeToSeconds(m.syncH1 || "00:00", 0);
+            const h2Sync = timeToSeconds(m.syncH2 || "45:00", 2700);
+            if (m.isH2) {
+                return 2700 + (footageSec - h2Sync);
+            } else {
+                return footageSec - h1Sync;
+            }
         }
 
         // ÚJ: Modul szintű projekt mentés
@@ -1011,9 +1029,16 @@
         function editTimeManual() {
             if (state.mode === 'live') return alert("Élő módban kézi időállítás nem lehetséges!");
             const m = state.modules[state.module];
-            let input = prompt("Idő (pp:mp):", formatTime(m.matchSeconds));
+
+            // Kiszámoljuk az aktuális videóidőt
+            const currentFootageSec = getFootageSeconds(m);
+
+            // Bekérjük az új videóidőt a felhasználótól
+            let input = prompt("Videó lejátszó ideje (pp:mp):", formatTime(Math.max(0, currentFootageSec)));
             if (input) {
-                m.matchSeconds = timeToSeconds(input, m.matchSeconds);
+                const newFootageSec = timeToSeconds(input, currentFootageSec);
+                // Visszaszámoljuk meccsidővé a háttér számára
+                m.matchSeconds = Math.max(0, getMatchSecondsFromFootage(newFootageSec, m));
                 updateTimerDisplay(); saveState();
             }
         }
@@ -1039,12 +1064,23 @@
             m.syncH2 = document.getElementById('sync-h2').value;
             m.videoUrl = document.getElementById('video-url').value;
             saveState();
+
+            // Ha átírjuk a szinkront, frissítsük újra az órát és a naplót!
+            updateTimerDisplay();
+            renderLog();
         }
 
         function updateTimerDisplay() {
             if (!state.module) return;
             const m = state.modules[state.module];
-            document.getElementById('timer').innerText = getMatchTimeLabel(m.matchSeconds, m.isH2);
+
+            // Ha Utólagos módban vagyunk, a videó idejét mutatjuk!
+            if (state.mode === 'post') {
+                const fSec = getFootageSeconds(m);
+                document.getElementById('timer').innerText = formatTime(Math.max(0, fSec));
+            } else {
+                document.getElementById('timer').innerText = getMatchTimeLabel(m.matchSeconds, m.isH2);
+            }
         }
 
         function logStandardEvent(team, action) {
@@ -1064,7 +1100,17 @@
             const list = document.getElementById('log-list'); list.innerHTML = '';
             m.eventsLog.slice(-4).reverse().forEach(e => {
                 let teamName = e.team === 'hazai' ? 'Hazai' : (e.team === 'vendeg' ? 'Vendég' : e.team);
-                list.innerHTML += `<li><span><b>[${e.matchTime}]</b> ${teamName} - ${e.action} ${e.detail}</span></li>`;
+
+                // Kiszámoljuk, hogy az adott esemény mennyi volt a videóban
+                let timeToShow = e.matchTime;
+                if (state.mode === 'post') {
+                    const h1Sync = timeToSeconds(m.syncH1 || "00:00", 0);
+                    const h2Sync = timeToSeconds(m.syncH2 || "45:00", 2700);
+                    let fSec = e.isH2 ? (h2Sync + (e.rawSec - 2700)) : (h1Sync + e.rawSec);
+                    timeToShow = formatTime(Math.max(0, fSec));
+                }
+
+                list.innerHTML += `<li><span><b>[${timeToShow}]</b> ${teamName} - ${e.action} ${e.detail}</span></li>`;
             });
         }
 
@@ -1299,19 +1345,29 @@
                 const h2Str = m.syncH2 || "45:00";
                 const h1Sync = timeToSeconds(h1Str, 0);
                 const h2Sync = timeToSeconds(h2Str, 2700);
-                const videoUrl = m.videoUrl || "";
+                const videoUrl = m.videoUrl ? m.videoUrl.trim() : "";
 
-                // ÚJ: Szinkron adatok kiírása az Advanced mód elején
                 if (videoUrl !== "") csv += `Video URL:,${videoUrl}\n`;
                 csv += `1. Felido Video Start:,${h1Str}\n`;
                 csv += `2. Felido Video Start:,${h2Str}\n\n`;
 
-                csv += "Modul,Meccs Ido,Video Ido,Felido,Csapat,Esemeny,Reszlet\n";
+                // ÚJ: Beletettük a Video Link oszlopot a fejlécbe
+                csv += "Modul,Meccs Ido,Video Ido,Felido,Csapat,Esemeny,Reszlet,Video Link\n";
 
                 sortedLogs.forEach(e => {
                     let ft = e.isH2 ? (h2Sync + (e.rawSec - 2700)) : (h1Sync + e.rawSec);
                     let teamName = e.team === 'hazai' ? homeTeamRaw : (e.team === 'vendeg' ? awayTeamRaw : e.team);
-                    csv += `${state.module},${e.matchTime},${formatTime(ft)},${e.isH2 ? 'H2' : 'H1'},${teamName},${e.action},${e.detail}\n`;
+
+                    // ÚJ: A pontos időbélyeges YouTube/Videó link generálása
+                    let eventLink = "";
+                    if (videoUrl !== "") {
+                        // Ha a linkben már van '?' (pl. youtube.com/watch?v=...), akkor '&'-el fűzzük hozzá, ha nincs (pl. youtu.be/...), akkor '?'-lel.
+                        let separator = videoUrl.includes('?') ? '&' : '?';
+                        let safeSeconds = Math.max(0, Math.floor(ft)); // Biztosítjuk, hogy ne legyen negatív
+                        eventLink = `${videoUrl}${separator}t=${safeSeconds}s`;
+                    }
+
+                    csv += `${state.module},${e.matchTime},${formatTime(ft)},${e.isH2 ? 'H2' : 'H1'},${teamName},${e.action},${e.detail},${eventLink}\n`;
                 });
             }
 
