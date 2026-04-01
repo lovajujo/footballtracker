@@ -93,7 +93,7 @@ Advanced (részletes): ha megadtál videó URL-t, a táblázat legutolsó oszlop
 
 A program úgy lett megtervezve, hogy minimális esély legyen az adatvesztésre. Semmi probléma, ha véletlenül bezárod a böngészőt/újratöltöd az oldalt/vissza gombot nyomsz/lezárod a telefonodat, a munkád addig nem fog elveszni, amíg nem nyomsz rá a RESET gombra vagy váltasz élő és utólagos mód között.
 
-TIPP: figyelj a felugró figyelmeztetésekre és akkor nem lesz gond!
+TIPP: figyelj a felugró figyelmeztetésekre és akkor nem lesz gond! (Lehet idegesítő lesz a sok figyelmeztetés, de fő a biztonság)
 
 ⌨️ Gyorsbillentyűk Összegzése
 Szóköz: Start / Szünet (Óra indítása, megállítása)

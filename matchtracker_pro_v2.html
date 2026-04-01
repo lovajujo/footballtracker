@@ -453,7 +453,7 @@
             <input type="file" id="file-upload" class="hidden" accept=".json" onchange="loadConfig(event)">
         </div>
         <button class="menu-btn custom" style="margin-top: 20px;" onclick="initModule('custom')">Tovább a meccshez ➔</button>
-        <button class="btn-ctrl" style="width: 100%; background: var(--danger); margin-top: 10px;" onclick="switchView('view-menu')">Vissza</button>
+        <button class="btn-ctrl" style="width: 100%; background: var(--text); color: black; margin-top: 10px;" onclick="switchView('view-menu')">Vissza</button>
     </div>
 
     <div id="view-tracker" class="view-container hidden">
@@ -462,7 +462,7 @@
             <button class="btn-ctrl" style="background: var(--gray); padding: 5px 10px;" onclick="backToMenu()">🔙 Menü</button>
             <h3 id="module-title" style="margin: 0; color: #888; flex-grow: 1; text-align: center;">MODUL</h3>
             <div style="display: flex; gap: 5px;">
-                <button class="btn-ctrl" style="background: var(--gray); padding: 5px 10px;" onclick="saveModuleProject()">💾 Projekt mentés</button>
+                <button class="btn-ctrl" style="background: var(--gray); padding: 5px 10px;" onclick="saveModuleProject()">💾 Projekt mentése</button>
                 <button class="btn-ctrl" style="background: var(--gray); padding: 5px 10px;" onclick="document.getElementById('module-upload').click()">📂 Betöltés</button>
                 <input type="file" id="module-upload" class="hidden" accept=".json" onchange="loadModuleProject(event)">
                 <button class="btn-ctrl" style="background: #ff0000;color: #ffffff; padding: 5px 10px;" onclick="fullReset()">RESET</button>
@@ -545,7 +545,7 @@
             <div id="stats-content"></div>
         </div>
 
-        <button class="export-btn" onclick="exportData()">💾 ADATOK LETÖLTÉSE (CSV)</button>
+        <button class="export-btn" onclick="exportData()">💾 ADATOK EXPORTÁLÁSA (CSV)</button>
     </div>
 
     <script>
@@ -1280,7 +1280,7 @@
             const m = state.modules[state.module];
             if (m.eventsLog.length === 0) return alert('Nincs rögzített adat ebben a modulban!');
 
-            let mode = prompt("Válaszd ki a letöltési módot:\n1 - Original (Egyszerűsített és Kimutatás)\n2 - Advanced (Részletes, videó szinkronnal)", "1");
+            let mode = prompt("Válaszd ki a letöltési módot:\n1 - Original (Tamás féle)\n2 - Advanced (Részletes, videó szinkronnal)", "1");
             if (mode !== "1" && mode !== "2") return;
 
             let homeTeamRaw = prompt("Hazai csapat neve:", "Hazai") || "hazai";
