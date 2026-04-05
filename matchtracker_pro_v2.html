@@ -1287,6 +1287,11 @@
             let awayTeamRaw = prompt("Vendég csapat neve:", "Vendeg") || "vendeg";
             let ageGroupRaw = prompt("Korosztály (pl. U19):", "U19") || "senior";
 
+            // ÚJ: Dátum bekérése (alapértelmezetten a mai napot kínálja fel)
+            const today = new Date();
+            const defaultDate = today.getFullYear() + "." + String(today.getMonth() + 1).padStart(2, '0') + "." + String(today.getDate()).padStart(2, '0');
+            let matchDateRaw = prompt("Meccs dátuma:", defaultDate) || defaultDate;
+
             const sanitize = (str) => {
                 return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
                     .replace(/[^a-zA-Z0-9]/g, '_')
@@ -1298,24 +1303,29 @@
             const homeTeam = sanitize(homeTeamRaw);
             const awayTeam = sanitize(awayTeamRaw);
             const ageGroup = sanitize(ageGroupRaw);
+            const matchDate = sanitize(matchDateRaw);
 
-            const today = new Date();
-            const dateStr = today.getFullYear() + String(today.getMonth() + 1).padStart(2, '0') + String(today.getDate()).padStart(2, '0');
+            // ÚJ: A modul nevének meghatározása a kért formátumhoz
+            let modulePrefix = "CUSTOM";
+            if (state.module === 'fieldtilt') modulePrefix = "FT";
+            if (state.module === 'ppda') modulePrefix = "PPDA";
 
-            const formatInd = mode === "1" ? "o" : "a";
+            const formatInd = mode === "1" ? "" : "_adv";
 
-            const fileName = `${homeTeam}_vs_${awayTeam}_${ageGroup}_${dateStr}_${state.module}_${formatInd}.csv`;
-
+            // ÚJ: A fájlnév összerakása a kért sorrendben
+            const fileName = `${modulePrefix}_${homeTeam}_vs_${awayTeam}_${ageGroup}_${matchDate}${formatInd}.csv`;
             let csv = "\uFEFF";
 
-            const sortedLogs = [...m.eventsLog].sort((a, b) => a.rawSec - b.rawSec);
+            const sortedLogs = [...m.eventsLog].sort((a, b) => (a.isH2 === b.isH2 ? a.rawSec - b.rawSec : (a.isH2 ? 1 : -1)));
 
             if (mode === "1") {
                 if (state.module === 'ppda') {
                     csv += "Ido,Csapat,Akcio,Reszlet\n";
                     sortedLogs.forEach(e => {
                         let teamName = e.team === 'hazai' ? 'Hazai' : (e.team === 'vendeg' ? 'Vendég' : e.team);
-                        csv += `${e.matchTime},${teamName},${e.action},${e.detail}\n`;
+                        let actionName = e.action === 'Második félidő' ? 'JÁTÉKRÉSZ VÉGE' : e.action;
+
+                        csv += `${e.matchTime},${teamName},${actionName},${e.detail}\n`;
                     });
 
                     let tl = calcPPDATimeline();
