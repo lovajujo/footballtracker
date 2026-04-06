@@ -1347,6 +1347,7 @@
                     csv += "Ido,Csapat,Esemeny\n";
                     sortedLogs.forEach(e => {
                         let teamName = e.team === 'hazai' ? 'Hazai' : (e.team === 'vendeg' ? 'Vendég' : e.team);
+                        let actionName = e.action === 'Második félidő' ? 'JÁTÉKRÉSZ VÉGE' : e.action;
                         csv += `${e.matchTime},${teamName},${e.action}\n`;
                     });
                 }
